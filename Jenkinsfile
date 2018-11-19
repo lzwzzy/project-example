@@ -144,7 +144,7 @@ pipeline {
             // ['bash', '-c', startCmd].execute().text
         }
 
-        @NonCPS
+        // @NonCPS
         def getRequirementsIds() {
             def reqIds = "";
             final changeSets = currentBuild.changeSets
@@ -165,7 +165,7 @@ pipeline {
             }
             return reqIds;
         }
-        @NonCPS
+        // @NonCPS
         def getRevisionIds() {
             def reqIds = "";
             final changeSets = currentBuild.changeSets
