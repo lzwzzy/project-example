@@ -1,6 +1,6 @@
 pipeline {
     agent any
-	environment {
+    environment {
         mvnHome = ''
         artiServer = ''
         rtMaven = ''
@@ -11,14 +11,14 @@ pipeline {
         def artiServer = Artifactory.server 'art'
         def rtMaven = Artifactory.newMavenBuild()
         def buildInfo = Artifactory.newBuildInfo()
-		def artifactoryUrl = 'http://139.199.24.190:8081/artifactory/'
+        def artifactoryUrl = 'http://139.199.24.190:8081/artifactory/'
         def resolveSnapshotRepo = 'lib-snapshot'
         def resolveReleaseRepo = 'lib-release'
         def deploySnapshotRepo = 'lib-snapshot'
         def deployReleaseRepo = 'lib-release'
 
-		def promotionSourceRepo = 'lib-release-local'
-		def promotionTargetRepo = 'lib-snapshot-local'
+        def promotionSourceRepo = 'lib-release-local'
+        def promotionTargetRepo = 'lib-snapshot-local'
 
         //maven
         def mavenTool = 'maven'
@@ -141,42 +141,44 @@ pipeline {
             // echo startCmd
             // ['bash', '-c', startCmd].execute().text
         }
-    }
 
-    @NonCPS
-    def getRequirementsIds() {
-        def reqIds = "";
-        final changeSets = currentBuild.changeSets
-        echo 'changeset count:' + changeSets.size().toString()
-        final changeSetIterator = changeSets.iterator()
-        while (changeSetIterator.hasNext()) {
-            final changeSet = changeSetIterator.next();
-            def logEntryIterator = changeSet.iterator();
-            while (logEntryIterator.hasNext()) {
-                final logEntry = logEntryIterator.next()
-                def patten = ~/#[\w\-_\d]+/;
-                def matcher = (logEntry.getMsg() =~ patten);
-                def count = matcher.getCount();
-                for (int i = 0; i < count; i++) {
-                    reqIds += matcher[i].replace('#', '') + ","
+        @NonCPS
+        def getRequirementsIds() {
+            def reqIds = "";
+            final changeSets = currentBuild.changeSets
+            echo 'changeset count:' + changeSets.size().toString()
+            final changeSetIterator = changeSets.iterator()
+            while (changeSetIterator.hasNext()) {
+                final changeSet = changeSetIterator.next();
+                def logEntryIterator = changeSet.iterator();
+                while (logEntryIterator.hasNext()) {
+                    final logEntry = logEntryIterator.next()
+                    def patten = ~/#[\w\-_\d]+/;
+                    def matcher = (logEntry.getMsg() =~ patten);
+                    def count = matcher.getCount();
+                    for (int i = 0; i < count; i++) {
+                        reqIds += matcher[i].replace('#', '') + ","
+                    }
                 }
             }
+            return reqIds;
         }
-        return reqIds;
-    }
-    @NonCPS
-    def getRevisionIds() {
-        def reqIds = "";
-        final changeSets = currentBuild.changeSets
-        final changeSetIterator = changeSets.iterator()
-        while (changeSetIterator.hasNext()) {
-            final changeSet = changeSetIterator.next();
-            def logEntryIterator = changeSet.iterator();
-            while (logEntryIterator.hasNext()) {
-                final logEntry = logEntryIterator.next()
-                reqIds += logEntry.getRevision() + ","
+        @NonCPS
+        def getRevisionIds() {
+            def reqIds = "";
+            final changeSets = currentBuild.changeSets
+            final changeSetIterator = changeSets.iterator()
+            while (changeSetIterator.hasNext()) {
+                final changeSet = changeSetIterator.next();
+                def logEntryIterator = changeSet.iterator();
+                while (logEntryIterator.hasNext()) {
+                    final logEntry = logEntryIterator.next()
+                    reqIds += logEntry.getRevision() + ","
+                }
             }
+            return reqIds
         }
-        return reqIds
     }
+
+
 }
