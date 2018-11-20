@@ -146,41 +146,41 @@ pipeline {
     }
 
 	// @NonCPS
-        def getRequirementsIds() {
-            def reqIds = "";
-            final changeSets = currentBuild.changeSets
-            echo 'changeset count:' + changeSets.size().toString()
-            final changeSetIterator = changeSets.iterator()
-            while (changeSetIterator.hasNext()) {
-                final changeSet = changeSetIterator.next();
-                def logEntryIterator = changeSet.iterator();
-                while (logEntryIterator.hasNext()) {
-                    final logEntry = logEntryIterator.next()
-                    def patten = ~/#[\w\-_\d]+/;
-                    def matcher = (logEntry.getMsg() =~ patten);
-                    def count = matcher.getCount();
-                    for (int i = 0; i < count; i++) {
-                        reqIds += matcher[i].replace('#', '') + ","
-                    }
-                }
-            }
-            return reqIds;
-        }
-        // @NonCPS
-        def getRevisionIds() {
-            def reqIds = "";
-            final changeSets = currentBuild.changeSets
-            final changeSetIterator = changeSets.iterator()
-            while (changeSetIterator.hasNext()) {
-                final changeSet = changeSetIterator.next();
-                def logEntryIterator = changeSet.iterator();
-                while (logEntryIterator.hasNext()) {
-                    final logEntry = logEntryIterator.next()
-                    reqIds += logEntry.getRevision() + ","
-                }
-            }
-            return reqIds
-        }
+        // def getRequirementsIds() {
+        //     def reqIds = "";
+        //     final changeSets = currentBuild.changeSets
+        //     echo 'changeset count:' + changeSets.size().toString()
+        //     final changeSetIterator = changeSets.iterator()
+        //     while (changeSetIterator.hasNext()) {
+        //         final changeSet = changeSetIterator.next();
+        //         def logEntryIterator = changeSet.iterator();
+        //         while (logEntryIterator.hasNext()) {
+        //             final logEntry = logEntryIterator.next()
+        //             def patten = ~/#[\w\-_\d]+/;
+        //             def matcher = (logEntry.getMsg() =~ patten);
+        //             def count = matcher.getCount();
+        //             for (int i = 0; i < count; i++) {
+        //                 reqIds += matcher[i].replace('#', '') + ","
+        //             }
+        //         }
+        //     }
+        //     return reqIds;
+        // }
+        // // @NonCPS
+        // def getRevisionIds() {
+        //     def reqIds = "";
+        //     final changeSets = currentBuild.changeSets
+        //     final changeSetIterator = changeSets.iterator()
+        //     while (changeSetIterator.hasNext()) {
+        //         final changeSet = changeSetIterator.next();
+        //         def logEntryIterator = changeSet.iterator();
+        //         while (logEntryIterator.hasNext()) {
+        //             final logEntry = logEntryIterator.next()
+        //             reqIds += logEntry.getRevision() + ","
+        //         }
+        //     }
+        //     return reqIds
+        // }
 
 
 }
