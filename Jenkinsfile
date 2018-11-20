@@ -1,7 +1,7 @@
 import groovy.json.JsonSlurper
 import groovy.json.JsonOutput
 
-def sonarServer = 'sonar'
+
 node {
 
     //artifactory
@@ -29,7 +29,7 @@ node {
 
     //sonar
     def sonarUrl = 'http://192.168.1.151:9000'
-    
+    def sonarServer = 'sonar-1'
     def sonarScannerTool = 'sonarClient'
     def sonarProjectKey = 'mvn-e2e-pipeline-demo'
     def sonarSources = 'maven-example/multi3/src'
@@ -54,8 +54,6 @@ node {
         // Sonar scan
         def scannerHome = tool sonarScannerTool;
         withSonarQubeEnv(sonarServer) {
-        	sh 'env'
-			sh 'cat /var/jenkins_home/tools/hudson.plugins.sonar.SonarRunnerInstallation/sonarClient/conf/sonar-runner.properties'
             sh "${scannerHome}/bin/sonar-runner -Dsonar.projectKey=" + sonarProjectKey + " -Dsonar.sources=" + sonarSources
         }
     }
