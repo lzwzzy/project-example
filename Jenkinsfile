@@ -71,6 +71,10 @@ node {
                 process = ['bash', '-c', getSonarIssuesCmd].execute().text
 
                 //增加sonar扫描结果到artifactory
+                def jsonSlurper = new JsonSlurper()
+                def issueMap = jsonSlurper.parseText(process);
+
+                //增加sonar扫描结果到artifactory
                 rtMaven.deployer.addProperty("qulity.gate.sonarUrl", sonarUrl + "/dashboard/index/${JOB_NAME}").addProperty("qulity.gate.sonarIssue", issueMap.total)
             }
         }
