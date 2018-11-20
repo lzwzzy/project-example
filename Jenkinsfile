@@ -36,9 +36,6 @@ node {
         rtMaven.resolver server: artiServer, releaseRepo: resolveReleaseRepo, snapshotRepo: resolveSnapshotRepo
         rtMaven.deployer server: artiServer, releaseRepo: deployReleaseRepo, snapshotRepo: deploySnapshotRepo
         rtMaven.tool = mavenTool
-        rtMaven.run pom: pomPath, goals: mavenGoals, buildInfo: buildInfo
-        rtMaven.deployer.deployArtifacts = false
-
     }
 
     stage('SCM') {
@@ -84,6 +81,8 @@ node {
     }
     //maven 构建
     stage('mvn build') {
+		rtMaven.run pom: pomPath, goals: mavenGoals, buildInfo: buildInfo
+        // rtMaven.deployer.deployArtifacts = false
         rtMaven.deployer.deployArtifacts buildInfo
         artiServer.publishBuildInfo buildInfo
     }
