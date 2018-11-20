@@ -3,58 +3,57 @@ import groovy.json.JsonOutput
 pipeline {
     agent any
     environment {
-        mvnHome = ''
-        artiServer = ''
-        rtMaven = ''
-        buildInfo = ''
-    }
-    stages {
-        //artifactory
-        def artiServer = Artifactory.server 'art'
-        def rtMaven = Artifactory.newMavenBuild()
-        def buildInfo = Artifactory.newBuildInfo()
-        def artifactoryUrl = 'http://139.199.24.190:8081/artifactory/'
-        def resolveSnapshotRepo = 'lib-snapshot'
-        def resolveReleaseRepo = 'lib-release'
-        def deploySnapshotRepo = 'lib-snapshot'
-        def deployReleaseRepo = 'lib-release'
+         artifactoryUrl = 'http://139.199.24.190:8081/artifactory/'
+         resolveSnapshotRepo = 'lib-snapshot'
+         resolveReleaseRepo = 'lib-release'
+         deploySnapshotRepo = 'lib-snapshot'
+         deployReleaseRepo = 'lib-release'
 
-        def promotionSourceRepo = 'lib-release-local'
-        def promotionTargetRepo = 'lib-snapshot-local'
+         promotionSourceRepo = 'lib-release-local'
+         promotionTargetRepo = 'lib-snapshot-local'
 
         //maven
-        def mavenTool = 'maven'
-        def mavenGoals = 'clean install'
-        def pomPath = 'maven-example/pom.xml'
+         mavenTool = 'maven'
+         mavenGoals = 'clean install'
+         pomPath = 'maven-example/pom.xml'
 
         //git
-        def gitUrl = 'https://github.com/JFrogChina/project-example.git'
-        def branch = 'master'
-        def gitCredentialsId = 'my-git-hub'
+         gitUrl = 'https://github.com/JFrogChina/project-example.git'
+         branch = 'master'
+         gitCredentialsId = 'my-git-hub'
 
         //sonar
-        def sonarUrl = 'http://192.168.199.201:9000'
-        def sonarServer = 'sonar'
-        def sonarScannerTool = 'sonarClient'
-        def sonarProjectKey = 'mvn-e2e-pipeline-demo'
-        def sonarSources = 'maven-example/multi3/src'
-
-
-
-        stage('env capture') {
-            buildInfo.env.capture = true
-        }
-        stage('SCM') {
-            git(url: gitUrl, branch: branch, changelog: true, credentialsId: gitCredentialsId, poll: true)
-        }
+         sonarUrl = 'http://192.168.199.201:9000'
+         sonarServer = 'sonar'
+         sonarScannerTool = 'sonarClient'
+         sonarProjectKey = 'mvn-e2e-pipeline-demo'
+         sonarSources = 'maven-example/multi3/src'
+    }
+    stages {
+        
+        
         //环境配置
         stage('Prepare') {
+
+			//artifactory
+			def artiServer = Artifactory.server 'art'
+			def rtMaven = Artifactory.newMavenBuild()
+			def buildInfo = Artifactory.newBuildInfo()
+
             rtMaven.resolver server: artiServer, releaseRepo: resolveReleaseRepo, snapshotRepo: resolveSnapshotRepo
             rtMaven.deployer server: artiServer, releaseRepo: deployReleaseRepo, snapshotRepo: deploySnapshotRepo
             rtMaven.tool = mavenTool
             rtMaven.run pom: pomPath, goals: mavenGoals, buildInfo: buildInfo
             rtMaven.deployer.deployArtifacts = false
 
+        }
+
+		stage('SCM') {
+            git(url: gitUrl, branch: branch, changelog: true, credentialsId: gitCredentialsId, poll: true)
+        }
+
+		stage('env capture') {
+            buildInfo.env.capture = true
         }
         //Sonar 静态代码扫描
         stage('Sonar') {
