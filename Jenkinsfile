@@ -55,6 +55,7 @@ node {
         def scannerHome = tool sonarScannerTool;
         withSonarQubeEnv(sonarServer) {
         	sh 'env'
+			sh 'cat /var/jenkins_home/tools/hudson.plugins.sonar.SonarRunnerInstallation/sonarClient/conf/sonar-runner.properties'
             sh "${scannerHome}/bin/sonar-runner -Dsonar.projectKey=" + sonarProjectKey + " -Dsonar.sources=" + sonarSources
         }
     }
