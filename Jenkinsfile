@@ -36,9 +36,9 @@ pipeline {
         stage('Prepare') {
 
 			//artifactory
-			def artiServer = Artifactory.server 'art'
-			def rtMaven = Artifactory.newMavenBuild()
-			def buildInfo = Artifactory.newBuildInfo()
+			 artiServer = Artifactory.server 'art'
+			 rtMaven = Artifactory.newMavenBuild()
+			 buildInfo = Artifactory.newBuildInfo()
 
             rtMaven.resolver server: artiServer, releaseRepo: resolveReleaseRepo, snapshotRepo: resolveSnapshotRepo
             rtMaven.deployer server: artiServer, releaseRepo: deployReleaseRepo, snapshotRepo: deploySnapshotRepo
