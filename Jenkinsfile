@@ -83,7 +83,7 @@ node {
         def requirements = getRequirementsIds();
         echo "requirements : ${requirements}"
         //def revisionIds = getRevisionIds();
-        def revisionIds = getRevisionIds;
+        def revisionIds = getRevisionIds();
         echo "revisionIds : ${revisionIds}"
         rtMaven.deployer.addProperty("project.issues", requirements).addProperty("project.revisionIds", revisionIds)
     }
