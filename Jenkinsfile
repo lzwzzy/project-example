@@ -1,3 +1,7 @@
+import groovy.json.JsonSlurper
+import groovy.json.JsonOutput
+
+def sonarServer = 'sonar'
 node {
 
     //artifactory
@@ -25,7 +29,7 @@ node {
 
     //sonar
     def sonarUrl = 'http://192.168.1.151:9000'
-    def sonarServer = 'sonar'
+    
     def sonarScannerTool = 'sonarClient'
     def sonarProjectKey = 'mvn-e2e-pipeline-demo'
     def sonarSources = 'maven-example/multi3/src'
