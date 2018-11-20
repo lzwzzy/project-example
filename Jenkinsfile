@@ -136,8 +136,9 @@ node {
         // ['bash', '-c', startCmd].execute().text
     }
 
+}
 
-    @NonCPS
+	@NonCPS
     def getRequirementsIds() {
         def reqIds = "";
         final changeSets = currentBuild.changeSets
@@ -158,7 +159,7 @@ node {
         }
         return reqIds;
     }
-    // @NonCPS
+    @NonCPS
     def getRevisionIds() {
         def reqIds = "";
         final changeSets = currentBuild.changeSets
@@ -173,6 +174,3 @@ node {
         }
         return reqIds
     }
-
-
-}
