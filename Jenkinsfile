@@ -54,6 +54,7 @@ node {
         // Sonar scan
         def scannerHome = tool sonarScannerTool;
         withSonarQubeEnv(sonarServer) {
+        	sh 'env'
             sh "${scannerHome}/bin/sonar-runner -Dsonar.projectKey=" + sonarProjectKey + " -Dsonar.sources=" + sonarSources
         }
     }
