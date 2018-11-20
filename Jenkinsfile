@@ -43,7 +43,7 @@ node {
     }
 
     stage('SCM') {
-        git(url: gitUrl, branch: branch, changelog: true, credentialsId: gitCredentialsId, poll: true)
+        git(url: gitUrl, branch: branch, changelog: true, credentialsId: gitCredentialsId)
     }
 
     stage('env capture') {
