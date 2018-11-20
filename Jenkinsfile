@@ -29,7 +29,7 @@ node {
 
     //sonar
     def sonarUrl = 'http://192.168.1.151:9000'
-    def sonarServer = 'sonar-1'
+    def sonarServer = 'sonar'
     def sonarScannerTool = 'sonarClient'
     def sonarProjectKey = 'mvn-e2e-pipeline-demo'
     def sonarSources = 'maven-example/multi3/src'
@@ -53,8 +53,8 @@ node {
     stage('Sonar') {
         // Sonar scan
         def scannerHome = tool sonarScannerTool;
-        withSonarQubeEnv('sonar') {
-            sh "${scannerHome}/bin/sonar-runner -Dsonar.projectKey=" + sonarProjectKey + " -Dsonar.sources=" + sonarSources
+        withSonarQubeEnv(sonarServer) {
+            sh "${scannerHome}/bin/sonar-runner -Dsonar.projectKey=" + sonarProjectKey + " -Dsonar.sources=" + sonarSources + " -Dsonar.host.url=${SONAR_HOST_URL}"
         }
     }
     //添加sonar扫描结果到包上
