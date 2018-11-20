@@ -28,7 +28,7 @@ node {
     def gitCredentialsId = 'my-git-hub'
 
     //sonar
-    def sonarUrl = 'http://192.168.1.151:9000'
+    def sonarUrl = 'http://192.168.199.201:9000'
     def sonarServer = 'sonar'
     def sonarScannerTool = 'sonarClient'
     def sonarProjectKey = 'mvn-e2e-pipeline-demo'
