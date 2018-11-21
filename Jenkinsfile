@@ -14,8 +14,8 @@ node {
     def deploySnapshotRepo = 'lib-snapshot'
     def deployReleaseRepo = 'lib-release'
 
-    def promotionSourceRepo = 'lib-release-local'
-    def promotionTargetRepo = 'lib-snapshot-local'
+    def promotionSourceRepo = 'lib-snapshot-local'
+    def promotionTargetRepo = 'lib-release-local'
 
     //maven
     def mavenTool = 'maven'
