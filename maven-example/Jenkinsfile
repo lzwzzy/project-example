@@ -141,7 +141,9 @@ node {
         
         def latestVersionUrl = "${ARTIFACTORY_URL}api/search/latestVersion?g=org.jfrog.test&a=multi3&v=3.7-SNAPSHOT&repos=lib-release-local"
 
-        def warLatestVersion = httpRequest consoleLogResponseBody: true, ignoreSslErrors: true, url: latestVersionUrl
+        def response = httpRequest consoleLogResponseBody: true, ignoreSslErrors: true, url: latestVersionUrl
+
+        def warLatestVersion = response.content
 
         def deployCmd = "ansible 127.0.0.1 -m get_url -a 'url=${ARTIFACTORY_URL}${PROMOTION_TARGET_REPO}/org/jfrog/test/multi3/3.7-SNAPSHOT/multi3-${warLatestVersion}.war  dest=/root/apache-tomcat-8.5.35/webapps/demo.war force=true url_username=admin url_password=${ARTIFACTORY_API_KEY}'"
         //sh "ansible 10.1.1.1 -m shell -a '/tomcat/startup.sh' "
