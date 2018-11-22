@@ -6,6 +6,7 @@ node {
     def rtMaven = Artifactory.newMavenBuild()
     def buildInfo = Artifactory.newBuildInfo()
     def ARTIFACTORY_URL = 'http://139.199.24.190:8081/artifactory/'
+    def ARTIFACTORY_API_KEY = 'AKCp5btVgWHzgQBTpRC4JEH4gGR5Mj3fq6n33rUEwJv7v7V2JxbEbwL1T6AKaaqBxCmHcYQva'
     def RESOLVE_SNAPSHOT_REPO = 'lib-snapshot'
     def RESOLVE_RELEASE_REPO = 'lib-release'
     def DEPLOY_SNAPSHOT_REPO = 'lib-snapshot'
@@ -137,21 +138,26 @@ node {
     }
     //进行部署
     stage('deploy') {
-        // def deployCmd = "ansible 127.0.0.1 -m get_url -a 'url=" + ARTIFACTORY_URL + PROMOTION_TARGET_REPO + "/org/jfrog/test/multi3/7.0.1-SNAPSHOT/multi3-" + warVersion + ".war  dest=/home/tomcat/apache-tomcat-8.5.33/webapps/demo.war force=true url_username=admin url_password=AKCp5bBXY7TmCE3s13XrGRM3ejcCGfiNgmtAFbaR8yNNLuZW3f7vFhzbv9NxBLP1AWxJr9Zj2'"
-        // //sh "ansible 10.1.1.1 -m shell -a '/tomcat/startup.sh' "
-        // echo deployCmd
-        // process = ['bash', '-c', deployCmd].execute().text
+        
+        def latestVersionUrl = "${ARTIFACTORY_URL}api/search/latestVersion?g=org.jfrog.test&a=multi3&v=3.7-SNAPSHOT&repos=lib-release-local"
 
-        // commandText = "curl  -X PUT \""+ ARTIFACTORY_URL + "api/storage/libs-release-local/org/jfrog/test/multi3/7.0.1-SNAPSHOT/multi3-" + warVersion + ".war?properties=deploy.tool=ansible;deploy.env=127.0.0.1\" -uadmin:AKCp5bBXY7TmCE3s13XrGRM3ejcCGfiNgmtAFbaR8yNNLuZW3f7vFhzbv9NxBLP1AWxJr9Zj2";
-        // echo commandText
-        // ['bash', '-c', commandText].execute().text
+        def warLatestVersion = httpRequest consoleLogResponseBody: true, ignoreSslErrors: true, url: latestVersionUrl
 
-        // def stopCmd = "ansible 127.0.0.1 -m shell -a '/home/tomcat/apache-tomcat-8.5.33/bin/shutdown.sh'"
-        // echo stopCmd
-        // ['bash', '-c', stopCmd].execute().text
-        // def startCmd = "ansible 127.0.0.1 -m shell -a '/home/tomcat/apache-tomcat-8.5.33/bin/startup.sh'"
-        // echo startCmd
-        // ['bash', '-c', startCmd].execute().text
+        def deployCmd = "ansible 127.0.0.1 -m get_url -a 'url=${ARTIFACTORY_URL}${PROMOTION_TARGET_REPO}/org/jfrog/test/multi3/3.7-SNAPSHOT/multi3-${warLatestVersion}.war  dest=/root/apache-tomcat-8.5.35/webapps/demo.war force=true url_username=admin url_password=${ARTIFACTORY_API_KEY}'"
+        //sh "ansible 10.1.1.1 -m shell -a '/tomcat/startup.sh' "
+        echo deployCmd
+        process = ['bash', '-c', deployCmd].execute().text
+
+        commandText = "curl  -X PUT ${ARTIFACTORY_URL}/api/storage/${PROMOTION_TARGET_REPO}/org/jfrog/test/multi3/3.7-SNAPSHOT/multi3-${warLatestVersion}.war?properties=deploy.tool=ansible;deploy.env=127.0.0.1\" -uadmin:${ARTIFACTORY_API_KEY}";
+        echo commandText
+        ['bash', '-c', commandText].execute().text
+
+        def stopCmd = "ansible 127.0.0.1 -m shell -a '/root/apache-tomcat-8.5.35/bin/shutdown.sh'"
+        echo stopCmd
+        ['bash', '-c', stopCmd].execute().text
+        def startCmd = "ansible 127.0.0.1 -m shell -a '/root/apache-tomcat-8.5.35/bin/startup.sh'"
+        echo startCmd
+        ['bash', '-c', startCmd].execute().text
     }
 
 }
