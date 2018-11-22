@@ -69,14 +69,17 @@ node {
                 def surl="${SONAR_HOST_URL}/api/measures/component?componentKey=${SONAR_PROJECT_KEY}&metricKeys=alert_status,quality_gate_details,coverage,new_coverage,bugs,new_bugs,reliability_rating,vulnerabilities,new_vulnerabilities,security_rating,sqale_rating,sqale_index,sqale_debt_ratio,new_sqale_debt_ratio,duplicated_lines_density&additionalFields=metrics,periods"
                 def response=httpRequest consoleLogResponseBody: true, contentType: 'APPLICATION_JSON', ignoreSslErrors: true, url: surl
                 
-                echo "Status: "+response.status
-                echo "Content: "+response.content
 
                 def propssonar = readJSON text: response.content
                 if (propssonar.component.measures) {
-                    echo propssonar.component.measures
                     propssonar.component.measures.each{ measure ->
-                        rtMaven.deployer.addProperty("sonar.quality." + measure.metric, measure.value)
+                        def val
+                        if (measure.periods){
+                            val = measure.periods[0].value
+                        }else {
+                            val = measure.value
+                        }
+                        rtMaven.deployer.addProperty("sonar.quality.${measure.metric}", val)
                     }
                 }
 
