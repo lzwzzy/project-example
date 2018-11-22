@@ -34,6 +34,7 @@ node {
     //环境配置
     stage('Prepare') {
 
+        echo "环境准备"
         rtMaven.resolver server: artiServer, releaseRepo: RESOLVE_RELEASE_REPO, snapshotRepo: RESOLVE_SNAPSHOT_REPO
         rtMaven.deployer server: artiServer, releaseRepo: DEPLOY_SNAPSHOT_REPO, snapshotRepo: DEPLOY_RELEASE_REPO
         rtMaven.tool = MAVEN_TOOL
@@ -44,6 +45,7 @@ node {
     }
 
     stage('env capture') {
+        echo "收集系统变量"
         buildInfo.env.capture = true
     }
     //Sonar 静态代码扫描
@@ -73,14 +75,10 @@ node {
                 def propssonar = readJSON text: response.content
                 if (propssonar.component.measures) {
                     echo propssonar.component.measures
-                    // propssonar.component.measures.each{ measure ->
-                    //     rtMaven.deployer.addProperty("qa.code.quality." + measure.metric,)
-                    // }
+                    propssonar.component.measures.each{ measure ->
+                        rtMaven.deployer.addProperty("sonar.quality." + measure.metric, measure.value)
+                    }
                 }
-
-                //增加sonar扫描结果到artifactory
-                // def jsonSlurper = new JsonSlurper()
-                // def issueMap = jsonSlurper.parseText(process);
 
                 //增加sonar扫描结果到artifactory
                 rtMaven.deployer.addProperty("qulity.gate.sonarUrl", "${SONAR_HOST_URL}/dashboard/index/${JOB_NAME}")
@@ -98,7 +96,8 @@ node {
     //maven 构建
     stage('mvn build') {
 		rtMaven.run pom: POM_PATH, goals: MAVEN_GOALS, buildInfo: buildInfo
-        // rtMaven.deployer.deployArtifacts = false
+    }
+    stage('package deploy to aitifactory'){
         rtMaven.deployer.deployArtifacts buildInfo
         artiServer.publishBuildInfo buildInfo
     }
