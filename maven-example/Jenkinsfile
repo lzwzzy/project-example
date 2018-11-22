@@ -36,7 +36,7 @@ node {
 
         echo "环境准备"
         rtMaven.resolver server: artiServer, releaseRepo: RESOLVE_RELEASE_REPO, snapshotRepo: RESOLVE_SNAPSHOT_REPO
-        rtMaven.deployer server: artiServer, releaseRepo: DEPLOY_SNAPSHOT_REPO, snapshotRepo: DEPLOY_RELEASE_REPO
+        rtMaven.deployer server: artiServer, releaseRepo: DEPLOY_RELEASE_REPO, snapshotRepo: DEPLOY_SNAPSHOT_REPO
         rtMaven.tool = MAVEN_TOOL
     }
 
@@ -98,11 +98,11 @@ node {
     }
     //maven 构建
     stage('mvn build') {
-        // rtMaven.deployer.deployArtifacts = false
+        rtMaven.deployer.deployArtifacts = false
 		rtMaven.run pom: POM_PATH, goals: MAVEN_GOALS, buildInfo: buildInfo
     }
     stage('package deploy to aitifactory'){
-        // rtMaven.deployer.deployArtifacts buildInfo
+        rtMaven.deployer.deployArtifacts buildInfo
         artiServer.publishBuildInfo buildInfo
     }
     //进行测试
