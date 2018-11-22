@@ -99,9 +99,10 @@ node {
     //maven 构建
     stage('mvn build') {
 		rtMaven.run pom: POM_PATH, goals: MAVEN_GOALS, buildInfo: buildInfo
-        //rtMaven.deployer.deployArtifacts buildInfo
+        rtMaven.deployer.deployArtifacts = false
     }
     stage('package deploy to aitifactory'){
+        rtMaven.deployer.deployArtifacts buildInfo
         artiServer.publishBuildInfo buildInfo
     }
     //进行测试
