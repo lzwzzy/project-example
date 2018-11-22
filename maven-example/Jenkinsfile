@@ -1,6 +1,3 @@
-import groovy.json.JsonSlurper
-import groovy.json.JsonOutput
-
 
 node {
 
@@ -8,42 +5,42 @@ node {
     def artiServer = Artifactory.server 'art'
     def rtMaven = Artifactory.newMavenBuild()
     def buildInfo = Artifactory.newBuildInfo()
-    def artifactoryUrl = 'http://139.199.24.190:8081/artifactory/'
-    def resolveSnapshotRepo = 'lib-snapshot'
-    def resolveReleaseRepo = 'lib-release'
-    def deploySnapshotRepo = 'lib-snapshot'
-    def deployReleaseRepo = 'lib-release'
+    def ARTIFACTORY_URL = 'http://139.199.24.190:8081/artifactory/'
+    def RESOLVE_SNAPSHOT_REPO = 'lib-snapshot'
+    def RESOLVE_RELEASE_REPO = 'lib-release'
+    def DEPLOY_SNAPSHOT_REPO = 'lib-snapshot'
+    def DEPLOY_RELEASE_REPO = 'lib-release'
 
-    def promotionSourceRepo = 'lib-snapshot-local'
-    def promotionTargetRepo = 'lib-release-local'
+    def PROMOTION_SOURCE_REPO = 'lib-snapshot-local'
+    def PROMOTION_TARGET_REPO = 'lib-release-local'
 
     //maven
-    def mavenTool = 'maven'
-    def mavenGoals = 'clean install'
-    def pomPath = 'maven-example/pom.xml'
+    def MAVEN_TOOL = 'maven'
+    def MAVEN_GOALS = 'clean install'
+    def POM_PATH = 'maven-example/pom.xml'
 
     //git
-    def gitUrl = 'https://github.com/JFrogChina/project-example.git'
-    def branch = 'master'
-    def gitCredentialsId = 'my-git-hub'
+    def GIT_URL = 'https://github.com/JFrogChina/project-example.git'
+    def BRANCH = 'master'
+    def GIT_CREDENTIALS_ID = 'my-git-hub'
 
     //sonar
     def SONAR_HOST_URL = 'http://55279dc0.eu.ngrok.io'
-    def sonarServer = 'sonar'
-    def sonarScannerTool = 'sonarClient'
-    def sonarProjectKey = 'mvn-e2e-pipeline-demo'
-    def sonarSources = 'maven-example/multi3/src'
+    def SONAR_SERVER = 'sonar'
+    def SONAR_SCANNER_TOOL = 'sonarClient'
+    def SONAR_PROJECT_KEY = "${JOB_NAME}"
+    def SONAR_SOURCES = 'maven-example/multi3/src'
 
     //环境配置
     stage('Prepare') {
 
-        rtMaven.resolver server: artiServer, releaseRepo: resolveReleaseRepo, snapshotRepo: resolveSnapshotRepo
-        rtMaven.deployer server: artiServer, releaseRepo: deployReleaseRepo, snapshotRepo: deploySnapshotRepo
-        rtMaven.tool = mavenTool
+        rtMaven.resolver server: artiServer, releaseRepo: RESOLVE_RELEASE_REPO, snapshotRepo: RESOLVE_SNAPSHOT_REPO
+        rtMaven.deployer server: artiServer, releaseRepo: DEPLOY_SNAPSHOT_REPO, snapshotRepo: DEPLOY_RELEASE_REPO
+        rtMaven.tool = MAVEN_TOOL
     }
 
     stage('SCM') {
-        git(url: gitUrl, branch: branch, changelog: true, credentialsId: gitCredentialsId)
+        git(url: gitUrl, branch: BRANCH, changelog: true, credentialsId: GIT_CREDENTIALS_ID)
     }
 
     stage('env capture') {
@@ -52,9 +49,9 @@ node {
     //Sonar 静态代码扫描
     stage('Sonar') {
         // Sonar scan
-        def scannerHome = tool sonarScannerTool;
-        withSonarQubeEnv(sonarServer) {
-            sh "${scannerHome}/bin/sonar-runner -Dsonar.projectKey=" + sonarProjectKey + " -Dsonar.sources=" + sonarSources + " -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.java.binaries=*"
+        def scannerHome = tool SONAR_SCANNER_TOOL;
+        withSonarQubeEnv(SONAR_SERVER) {
+            sh "${scannerHome}/bin/sonar-runner -Dsonar.projectKey=${JOB_NAME} -Dsonar.sources=${SONAR_SOURCES} -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.java.binaries=*"
         }
     }
     //添加sonar扫描结果到包上
@@ -67,7 +64,7 @@ node {
                 error "Pipeline aborted due to quality gate failure: ${qg.status}"
             } else {
                 //获取sonar扫描结果
-                def surl="${SONAR_HOST_URL}/api/measures/component?componentKey=${JOB_NAME}&metricKeys=alert_status,quality_gate_details,coverage,new_coverage,bugs,new_bugs,reliability_rating,vulnerabilities,new_vulnerabilities,security_rating,sqale_rating,sqale_index,sqale_debt_ratio,new_sqale_debt_ratio,duplicated_lines_density&additionalFields=metrics,periods"
+                def surl="${SONAR_HOST_URL}/api/measures/component?componentKey=${SONAR_PROJECT_KEY}&metricKeys=alert_status,quality_gate_details,coverage,new_coverage,bugs,new_bugs,reliability_rating,vulnerabilities,new_vulnerabilities,security_rating,sqale_rating,sqale_index,sqale_debt_ratio,new_sqale_debt_ratio,duplicated_lines_density&additionalFields=metrics,periods"
                 def response=httpRequest consoleLogResponseBody: true, contentType: 'APPLICATION_JSON', ignoreSslErrors: true, url: surl
                 
                 echo "Status: "+response.status
@@ -86,7 +83,7 @@ node {
                 // def issueMap = jsonSlurper.parseText(process);
 
                 //增加sonar扫描结果到artifactory
-                rtMaven.deployer.addProperty("qulity.gate.sonarUrl", sonarUrl + "/dashboard/index/${JOB_NAME}")
+                rtMaven.deployer.addProperty("qulity.gate.sonarUrl", "${SONAR_HOST_URL}/dashboard/index/${JOB_NAME}")
             }
         }
     }
@@ -100,7 +97,7 @@ node {
     }
     //maven 构建
     stage('mvn build') {
-		rtMaven.run pom: pomPath, goals: mavenGoals, buildInfo: buildInfo
+		rtMaven.run pom: POM_PATH, goals: MAVEN_GOALS, buildInfo: buildInfo
         // rtMaven.deployer.deployArtifacts = false
         rtMaven.deployer.deployArtifacts buildInfo
         artiServer.publishBuildInfo buildInfo
@@ -125,9 +122,9 @@ node {
         def promotionConfig = [
                 'buildName'          : buildInfo.name,
                 'buildNumber'        : buildInfo.number,
-                'targetRepo'         : promotionTargetRepo,
+                'targetRepo'         : PROMOTION_TARGET_REPO,
                 'comment'            : 'this is the promotion comment',
-                'sourceRepo'         : promotionSourceRepo,
+                'sourceRepo'         : PROMOTION_SOURCE_REPO,
                 'status'             : 'Released',
                 'includeDependencies': false,
                 'failFast'           : true,
@@ -137,12 +134,12 @@ node {
     }
     //进行部署
     stage('deploy') {
-        // def deployCmd = "ansible 127.0.0.1 -m get_url -a 'url=" + artifactoryUrl + promotionTargetRepo + "/org/jfrog/test/multi3/7.0.1-SNAPSHOT/multi3-" + warVersion + ".war  dest=/home/tomcat/apache-tomcat-8.5.33/webapps/demo.war force=true url_username=admin url_password=AKCp5bBXY7TmCE3s13XrGRM3ejcCGfiNgmtAFbaR8yNNLuZW3f7vFhzbv9NxBLP1AWxJr9Zj2'"
+        // def deployCmd = "ansible 127.0.0.1 -m get_url -a 'url=" + ARTIFACTORY_URL + PROMOTION_TARGET_REPO + "/org/jfrog/test/multi3/7.0.1-SNAPSHOT/multi3-" + warVersion + ".war  dest=/home/tomcat/apache-tomcat-8.5.33/webapps/demo.war force=true url_username=admin url_password=AKCp5bBXY7TmCE3s13XrGRM3ejcCGfiNgmtAFbaR8yNNLuZW3f7vFhzbv9NxBLP1AWxJr9Zj2'"
         // //sh "ansible 10.1.1.1 -m shell -a '/tomcat/startup.sh' "
         // echo deployCmd
         // process = ['bash', '-c', deployCmd].execute().text
 
-        // commandText = "curl  -X PUT \""+ artifactoryUrl + "api/storage/libs-release-local/org/jfrog/test/multi3/7.0.1-SNAPSHOT/multi3-" + warVersion + ".war?properties=deploy.tool=ansible;deploy.env=127.0.0.1\" -uadmin:AKCp5bBXY7TmCE3s13XrGRM3ejcCGfiNgmtAFbaR8yNNLuZW3f7vFhzbv9NxBLP1AWxJr9Zj2";
+        // commandText = "curl  -X PUT \""+ ARTIFACTORY_URL + "api/storage/libs-release-local/org/jfrog/test/multi3/7.0.1-SNAPSHOT/multi3-" + warVersion + ".war?properties=deploy.tool=ansible;deploy.env=127.0.0.1\" -uadmin:AKCp5bBXY7TmCE3s13XrGRM3ejcCGfiNgmtAFbaR8yNNLuZW3f7vFhzbv9NxBLP1AWxJr9Zj2";
         // echo commandText
         // ['bash', '-c', commandText].execute().text
 
