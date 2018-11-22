@@ -28,7 +28,7 @@ node {
     def gitCredentialsId = 'my-git-hub'
 
     //sonar
-    def sonarUrl = 'http://55279dc0.eu.ngrok.io'
+    def SONAR_HOST_URL = 'http://55279dc0.eu.ngrok.io'
     def sonarServer = 'sonar'
     def sonarScannerTool = 'sonarClient'
     def sonarProjectKey = 'mvn-e2e-pipeline-demo'
@@ -67,15 +67,26 @@ node {
                 error "Pipeline aborted due to quality gate failure: ${qg.status}"
             } else {
                 //获取sonar扫描结果
-                def getSonarIssuesCmd = "curl  GET -v " + sonarUrl + "/api/issues/search?componentRoots=${JOB_NAME}";
-                process = ['bash', '-c', getSonarIssuesCmd].execute().text
+                def surl="${SONAR_HOST_URL}/api/measures/component?componentKey=${JOB_NAME}&metricKeys=alert_status,quality_gate_details,coverage,new_coverage,bugs,new_bugs,reliability_rating,vulnerabilities,new_vulnerabilities,security_rating,sqale_rating,sqale_index,sqale_debt_ratio,new_sqale_debt_ratio,duplicated_lines_density&additionalFields=metrics,periods"
+                def response=httpRequest consoleLogResponseBody: true, contentType: 'APPLICATION_JSON', ignoreSslErrors: true, url: surl
+                
+                echo "Status: "+response.status
+                echo "Content: "+response.content
+
+                def propssonar = readJSON text: response.content
+                if (propssonar.component.measures) {
+                    echo propssonar.component.measures
+                    // propssonar.component.measures.each{ measure ->
+                    //     rtMaven.deployer.addProperty("qa.code.quality." + measure.metric,)
+                    // }
+                }
 
                 //增加sonar扫描结果到artifactory
-                def jsonSlurper = new JsonSlurper()
-                def issueMap = jsonSlurper.parseText(process);
+                // def jsonSlurper = new JsonSlurper()
+                // def issueMap = jsonSlurper.parseText(process);
 
                 //增加sonar扫描结果到artifactory
-                rtMaven.deployer.addProperty("qulity.gate.sonarUrl", sonarUrl + "/dashboard/index/${JOB_NAME}").addProperty("qulity.gate.sonarIssue", issueMap.total.toString())
+                rtMaven.deployer.addProperty("qulity.gate.sonarUrl", sonarUrl + "/dashboard/index/${JOB_NAME}")
             }
         }
     }
