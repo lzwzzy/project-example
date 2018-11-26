@@ -35,6 +35,8 @@ node {
 withDockerContainer('kaiwinter/docker-java8-maven') {
     
 
+    env.JAVA_HOME = '/opt/java-oracle/jdk1.8.0_101'
+    env.MAVEN_HOME = '/opt/maven'
 
     //环境配置
     stage('Prepare') {
@@ -42,7 +44,7 @@ withDockerContainer('kaiwinter/docker-java8-maven') {
         echo "环境准备"
         rtMaven.resolver server: artiServer, releaseRepo: RESOLVE_RELEASE_REPO, snapshotRepo: RESOLVE_SNAPSHOT_REPO
         rtMaven.deployer server: artiServer, releaseRepo: DEPLOY_RELEASE_REPO, snapshotRepo: DEPLOY_SNAPSHOT_REPO
-        rtMaven.tool = MAVEN_TOOL
+        // rtMaven.tool = MAVEN_TOOL
     }
 
     stage('SCM') {
