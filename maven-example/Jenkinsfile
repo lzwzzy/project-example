@@ -31,8 +31,10 @@ node {
     def SONAR_SCANNER_TOOL = 'sonarClient'
     def SONAR_PROJECT_KEY = "${JOB_NAME}"
     def SONAR_SOURCES = 'maven-example/multi3/src'
-    withDockerContainer('kaiwinter/docker-java8-maven') {
     
+withDockerContainer(image: 'kaiwinter/docker-java8-maven', toolName: 'docker') {
+    
+
 
     //环境配置
     stage('Prepare') {
