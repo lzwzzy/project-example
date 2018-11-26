@@ -31,6 +31,8 @@ node {
     def SONAR_SCANNER_TOOL = 'sonarClient'
     def SONAR_PROJECT_KEY = "${JOB_NAME}"
     def SONAR_SOURCES = 'maven-example/multi3/src'
+    withDockerContainer('kaiwinter/docker-java8-maven') {
+    
 
     //环境配置
     stage('Prepare') {
@@ -160,6 +162,7 @@ node {
         def startCmd = "ansible 127.0.0.1 -m shell -a '/root/apache-tomcat-8.5.35/bin/startup.sh'"
         echo startCmd
         ['bash', '-c', startCmd].execute().text
+    }
     }
 
 }
