@@ -26,7 +26,7 @@ node {
     def GIT_CREDENTIALS_ID = 'my-git-hub'
 
     //sonar
-    def SONAR_HOST_URL = 'http://55279dc0.eu.ngrok.io'
+    def SONAR_HOST_URL = 'http://192.168.199.201:9000'
     def SONAR_SERVER = 'sonar'
     def SONAR_SCANNER_TOOL = 'sonarClient'
     def SONAR_PROJECT_KEY = "${JOB_NAME}"
