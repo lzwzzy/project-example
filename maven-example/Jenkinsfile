@@ -26,17 +26,14 @@ node {
     def GIT_CREDENTIALS_ID = 'my-git-hub'
 
     //sonar
-    def SONAR_HOST_URL = 'http://192.168.199.201:9000'
+    def SONAR_HOST_URL = 'http://47.94.232.3:9000'
     def SONAR_SERVER = 'sonar'
-    def SONAR_SCANNER_TOOL = 'sonarClient'
+    def SONAR_SCANNER_TOOL = 'sonar-scanner-2.6.1'
     def SONAR_PROJECT_KEY = "${JOB_NAME}"
     def SONAR_SOURCES = 'maven-example/multi3/src'
     
-withDockerContainer('kaiwinter/docker-java8-maven') {
-    
-
-    env.JAVA_HOME = '/opt/java-oracle/jdk1.8.0_101'
-    env.MAVEN_HOME = '/opt/maven'
+withDockerContainer('jfrogchina/java-sonar-mvn') {
+    withEnv(["JAVA_HOME=${ tool 'env-docker-maven-jdk-1.8.0_101' }", "PATH+MAVEN=${tool 'env-docker-maven-maven-3.3.9'}/bin:${env.JAVA_HOME}/bin"]) {
 
     //环境配置
     stage('Prepare') {
@@ -166,6 +163,7 @@ withDockerContainer('kaiwinter/docker-java8-maven') {
         def startCmd = "ansible 127.0.0.1 -m shell -a '/root/apache-tomcat-8.5.35/bin/startup.sh'"
         echo startCmd
         ['bash', '-c', startCmd].execute().text
+    }
     }
     }
 
