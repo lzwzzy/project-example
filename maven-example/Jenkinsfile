@@ -99,7 +99,7 @@ node {
             stage('add jiraResult') {
                 def requirements = getRequirementsIds();
                 echo "requirements : ${requirements}"
-                //def revisionIds = getRevisionIds();
+                
                 def revisionIds = getRevisionIds();
                 echo "revisionIds : ${revisionIds}"
                 rtMaven.deployer.addProperty("project.issues", requirements).addProperty("project.revisionIds", revisionIds)
@@ -166,6 +166,7 @@ node {
                 ['bash', '-c', startCmd].execute().text
             }
             stage('regression testing') {
+                sleep time: 1, unit: 'HOURS'
                 httpRequest url: 'http://localhost:8080', consoleLogResponseBody: true
             }
         }
