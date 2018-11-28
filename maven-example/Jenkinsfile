@@ -61,7 +61,7 @@ node {
                 // Sonar scan
                 def scannerHome = tool SONAR_SCANNER_TOOL;
                 withSonarQubeEnv(SONAR_SERVER) {
-                    sh "${scannerHome}/bin/sonar-runner -Dsonar.projectKey=${JOB_NAME} -Dsonar.sources=${SONAR_SOURCES} -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.java.binaries=*"
+                    sh "${scannerHome}/bin/sonar-runner -Dsonar.language=java -Dsonar.projectKey=${JOB_NAME} -Dsonar.sources=${SONAR_SOURCES} -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.java.binaries=*"
                 }
             }
             //添加sonar扫描结果到包上
