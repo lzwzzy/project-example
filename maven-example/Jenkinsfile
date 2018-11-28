@@ -31,179 +31,181 @@ node {
     def SONAR_SCANNER_TOOL = 'sonar-scanner-2.6.1'
     def SONAR_PROJECT_KEY = "${JOB_NAME}"
     def SONAR_SOURCES = 'maven-example/multi3/src'
-    
-    withEnv(["JAVA_HOME=${ tool 'env-docker-maven-jdk-1.8.0_101' }", "PATH+MAVEN=${tool 'env-docker-maven-maven-3.3.9'}/bin:${env.JAVA_HOME}/bin"]) {
+
+
     withDockerContainer('jfrogchina/java-sonar-mvn') {
-    
 
-    echo env.MAVEN_HOME
-    //环境配置
-    stage('Prepare') {
+        withEnv(["JAVA_HOME=${ tool 'env-docker-maven-jdk-1.8.0_101' }", "PATH+MAVEN=${tool 'env-docker-maven-maven-3.3.9'}/bin:${env.JAVA_HOME}/bin"]) {
 
-        echo "环境准备"
-        rtMaven.resolver server: artiServer, releaseRepo: RESOLVE_RELEASE_REPO, snapshotRepo: RESOLVE_SNAPSHOT_REPO
-        rtMaven.deployer server: artiServer, releaseRepo: DEPLOY_RELEASE_REPO, snapshotRepo: DEPLOY_SNAPSHOT_REPO
-        // rtMaven.tool = MAVEN_TOOL
-    }
+            echo env.JAVA_HOME
+            echo env.MAVEN_HOME
+            //环境配置
+            stage('Prepare') {
 
-    stage('SCM') {
-        git(url: GIT_URL, branch: BRANCH, changelog: true, credentialsId: GIT_CREDENTIALS_ID)
-    }
+                echo "环境准备"
+                rtMaven.resolver server: artiServer, releaseRepo: RESOLVE_RELEASE_REPO, snapshotRepo: RESOLVE_SNAPSHOT_REPO
+                rtMaven.deployer server: artiServer, releaseRepo: DEPLOY_RELEASE_REPO, snapshotRepo: DEPLOY_SNAPSHOT_REPO
+                // rtMaven.tool = MAVEN_TOOL
+            }
 
-    stage('env capture') {
-        echo "收集系统变量"
-        buildInfo.env.capture = true
-    }
-    //Sonar 静态代码扫描
-    stage('Sonar') {
-        // Sonar scan
-        def scannerHome = tool SONAR_SCANNER_TOOL;
-        withSonarQubeEnv(SONAR_SERVER) {
-            sh "${scannerHome}/bin/sonar-runner -Dsonar.projectKey=${JOB_NAME} -Dsonar.sources=${SONAR_SOURCES} -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.java.binaries=*"
-        }
-    }
-    //添加sonar扫描结果到包上
-    stage("Sonar Quality Gate") {
+            stage('SCM') {
+                git(url: GIT_URL, branch: BRANCH, changelog: true, credentialsId: GIT_CREDENTIALS_ID)
+            }
 
-        timeout(time: 1, unit: 'HOURS') {
-            // Just in case something goes wrong, pipeline will be killed after a timeout
-            def qg = waitForQualityGate() // Reuse taskId previously collected by withSonarQubeEnv
-            if (qg.status != 'OK') {
-                error "Pipeline aborted due to quality gate failure: ${qg.status}"
-            } else {
-                //获取sonar扫描结果
-                def surl="${SONAR_HOST_URL}/api/measures/component?componentKey=${SONAR_PROJECT_KEY}&metricKeys=alert_status,quality_gate_details,coverage,new_coverage,bugs,new_bugs,reliability_rating,vulnerabilities,new_vulnerabilities,security_rating,sqale_rating,sqale_index,sqale_debt_ratio,new_sqale_debt_ratio,duplicated_lines_density&additionalFields=metrics,periods"
-                def response=httpRequest consoleLogResponseBody: true, contentType: 'APPLICATION_JSON', ignoreSslErrors: true, url: surl
-                
+            stage('env capture') {
+                echo "收集系统变量"
+                buildInfo.env.capture = true
+            }
+            //Sonar 静态代码扫描
+            stage('Sonar') {
+                // Sonar scan
+                def scannerHome = tool SONAR_SCANNER_TOOL;
+                withSonarQubeEnv(SONAR_SERVER) {
+                    sh "${scannerHome}/bin/sonar-runner -Dsonar.projectKey=${JOB_NAME} -Dsonar.sources=${SONAR_SOURCES} -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.java.binaries=*"
+                }
+            }
+            //添加sonar扫描结果到包上
+            stage("Sonar Quality Gate") {
 
-                def propssonar = readJSON text: response.content
-                if (propssonar.component.measures) {
-                    propssonar.component.measures.each{ measure ->
-                        def val
-                        if (measure.periods){
-                            val = measure.periods[0].value
-                        }else {
-                            val = measure.value
+                timeout(time: 1, unit: 'HOURS') {
+                    // Just in case something goes wrong, pipeline will be killed after a timeout
+                    def qg = waitForQualityGate() // Reuse taskId previously collected by withSonarQubeEnv
+                    if (qg.status != 'OK') {
+                        error "Pipeline aborted due to quality gate failure: ${qg.status}"
+                    } else {
+                        //获取sonar扫描结果
+                        def surl="${SONAR_HOST_URL}/api/measures/component?componentKey=${SONAR_PROJECT_KEY}&metricKeys=alert_status,quality_gate_details,coverage,new_coverage,bugs,new_bugs,reliability_rating,vulnerabilities,new_vulnerabilities,security_rating,sqale_rating,sqale_index,sqale_debt_ratio,new_sqale_debt_ratio,duplicated_lines_density&additionalFields=metrics,periods"
+                        def response=httpRequest consoleLogResponseBody: true, contentType: 'APPLICATION_JSON', ignoreSslErrors: true, url: surl
+
+
+                        def propssonar = readJSON text: response.content
+                        if (propssonar.component.measures) {
+                            propssonar.component.measures.each{ measure ->
+                                def val
+                                if (measure.periods){
+                                    val = measure.periods[0].value
+                                }else {
+                                    val = measure.value
+                                }
+                                rtMaven.deployer.addProperty("sonar.quality.${measure.metric}", val)
+                            }
                         }
-                        rtMaven.deployer.addProperty("sonar.quality.${measure.metric}", val)
+
+                        //增加sonar扫描结果到artifactory
+                        rtMaven.deployer.addProperty("qulity.gate.sonarUrl", SONAR_HOST_URL + "/dashboard/index/" + SONAR_PROJECT_KEY)
                     }
                 }
+            }
+            stage('add jiraResult') {
+                def requirements = getRequirementsIds();
+                echo "requirements : ${requirements}"
+                //def revisionIds = getRevisionIds();
+                def revisionIds = getRevisionIds();
+                echo "revisionIds : ${revisionIds}"
+                rtMaven.deployer.addProperty("project.issues", requirements).addProperty("project.revisionIds", revisionIds)
+            }
+            //maven 构建
+            stage('mvn build') {
+                rtMaven.deployer.deployArtifacts = false
+                rtMaven.run pom: POM_PATH, goals: MAVEN_GOALS, buildInfo: buildInfo
+            }
+            stage('package deploy to aitifactory'){
+                rtMaven.deployer.deployArtifacts buildInfo
+                artiServer.publishBuildInfo buildInfo
+            }
+            //进行测试
+            stage('basic test') {
+                echo "add test step"
+            }
 
-                //增加sonar扫描结果到artifactory
-                rtMaven.deployer.addProperty("qulity.gate.sonarUrl", SONAR_HOST_URL + "/dashboard/index/" + SONAR_PROJECT_KEY)
+            stage('xray scan') {
+                def xrayConfig = [
+                        'buildName'  : env.JOB_NAME,
+                        'buildNumber': env.BUILD_NUMBER,
+                        'failBuild'  : false
+                ]
+                def xrayResults = artiServer.xrayScan xrayConfig
+                echo xrayResults as String
+            }
+
+            //promotion操作，进行包的升级
+            stage('promotion') {
+                def promotionConfig = [
+                        'buildName'          : buildInfo.name,
+                        'buildNumber'        : buildInfo.number,
+                        'targetRepo'         : PROMOTION_TARGET_REPO,
+                        'comment'            : 'this is the promotion comment',
+                        'sourceRepo'         : PROMOTION_SOURCE_REPO,
+                        'status'             : 'Released',
+                        'includeDependencies': false,
+                        'failFast'           : true,
+                        'copy'               : true
+                ]
+                artiServer.promote promotionConfig
+            }
+            //进行部署
+            stage('deploy') {
+
+                def latestVersionUrl = "${ARTIFACTORY_URL}api/search/latestVersion?g=org.jfrog.test&a=multi3&v=3.7-SNAPSHOT&repos=lib-release-local"
+
+                def response = httpRequest consoleLogResponseBody: true, ignoreSslErrors: true, url: latestVersionUrl
+
+                def warLatestVersion = response.content
+
+                def deployCmd = "ansible 127.0.0.1 -m get_url -a 'url=${ARTIFACTORY_URL}${PROMOTION_TARGET_REPO}/org/jfrog/test/multi3/3.7-SNAPSHOT/multi3-${warLatestVersion}.war  dest=/root/apache-tomcat-8.5.35/webapps/demo.war force=true url_username=admin url_password=${ARTIFACTORY_API_KEY}'"
+                //sh "ansible 10.1.1.1 -m shell -a '/tomcat/startup.sh' "
+                echo deployCmd
+                process = ['bash', '-c', deployCmd].execute().text
+
+                commandText = "curl  -X PUT ${ARTIFACTORY_URL}/api/storage/${PROMOTION_TARGET_REPO}/org/jfrog/test/multi3/3.7-SNAPSHOT/multi3-${warLatestVersion}.war?properties=deploy.tool=ansible;deploy.env=127.0.0.1\" -uadmin:${ARTIFACTORY_API_KEY}";
+                echo commandText
+                ['bash', '-c', commandText].execute().text
+
+                def stopCmd = "ansible 127.0.0.1 -m shell -a '/root/apache-tomcat-8.5.35/bin/shutdown.sh'"
+                echo stopCmd
+                ['bash', '-c', stopCmd].execute().text
+                def startCmd = "ansible 127.0.0.1 -m shell -a '/root/apache-tomcat-8.5.35/bin/startup.sh'"
+                echo startCmd
+                ['bash', '-c', startCmd].execute().text
             }
         }
-    }
-    stage('add jiraResult') {
-        def requirements = getRequirementsIds();
-        echo "requirements : ${requirements}"
-        //def revisionIds = getRevisionIds();
-        def revisionIds = getRevisionIds();
-        echo "revisionIds : ${revisionIds}"
-        rtMaven.deployer.addProperty("project.issues", requirements).addProperty("project.revisionIds", revisionIds)
-    }
-    //maven 构建
-    stage('mvn build') {
-        rtMaven.deployer.deployArtifacts = false
-		rtMaven.run pom: POM_PATH, goals: MAVEN_GOALS, buildInfo: buildInfo
-    }
-    stage('package deploy to aitifactory'){
-        rtMaven.deployer.deployArtifacts buildInfo
-        artiServer.publishBuildInfo buildInfo
-    }
-    //进行测试
-    stage('basic test') {
-        echo "add test step"
-    }
-
-    stage('xray scan') {
-        def xrayConfig = [
-                'buildName'  : env.JOB_NAME,
-                'buildNumber': env.BUILD_NUMBER,
-                'failBuild'  : false
-        ]
-        def xrayResults = artiServer.xrayScan xrayConfig
-        echo xrayResults as String
-    }
-
-    //promotion操作，进行包的升级
-    stage('promotion') {
-        def promotionConfig = [
-                'buildName'          : buildInfo.name,
-                'buildNumber'        : buildInfo.number,
-                'targetRepo'         : PROMOTION_TARGET_REPO,
-                'comment'            : 'this is the promotion comment',
-                'sourceRepo'         : PROMOTION_SOURCE_REPO,
-                'status'             : 'Released',
-                'includeDependencies': false,
-                'failFast'           : true,
-                'copy'               : true
-        ]
-        artiServer.promote promotionConfig
-    }
-    //进行部署
-    stage('deploy') {
-        
-        def latestVersionUrl = "${ARTIFACTORY_URL}api/search/latestVersion?g=org.jfrog.test&a=multi3&v=3.7-SNAPSHOT&repos=lib-release-local"
-
-        def response = httpRequest consoleLogResponseBody: true, ignoreSslErrors: true, url: latestVersionUrl
-
-        def warLatestVersion = response.content
-
-        def deployCmd = "ansible 127.0.0.1 -m get_url -a 'url=${ARTIFACTORY_URL}${PROMOTION_TARGET_REPO}/org/jfrog/test/multi3/3.7-SNAPSHOT/multi3-${warLatestVersion}.war  dest=/root/apache-tomcat-8.5.35/webapps/demo.war force=true url_username=admin url_password=${ARTIFACTORY_API_KEY}'"
-        //sh "ansible 10.1.1.1 -m shell -a '/tomcat/startup.sh' "
-        echo deployCmd
-        process = ['bash', '-c', deployCmd].execute().text
-
-        commandText = "curl  -X PUT ${ARTIFACTORY_URL}/api/storage/${PROMOTION_TARGET_REPO}/org/jfrog/test/multi3/3.7-SNAPSHOT/multi3-${warLatestVersion}.war?properties=deploy.tool=ansible;deploy.env=127.0.0.1\" -uadmin:${ARTIFACTORY_API_KEY}";
-        echo commandText
-        ['bash', '-c', commandText].execute().text
-
-        def stopCmd = "ansible 127.0.0.1 -m shell -a '/root/apache-tomcat-8.5.35/bin/shutdown.sh'"
-        echo stopCmd
-        ['bash', '-c', stopCmd].execute().text
-        def startCmd = "ansible 127.0.0.1 -m shell -a '/root/apache-tomcat-8.5.35/bin/startup.sh'"
-        echo startCmd
-        ['bash', '-c', startCmd].execute().text
-    }
-    }
     }
 
 }
 
-	@NonCPS
-    def getRequirementsIds() {
-        def reqIds = "";
-        final changeSets = currentBuild.changeSets
-        echo 'changeset count:' + changeSets.size().toString()
-        final changeSetIterator = changeSets.iterator()
-        while (changeSetIterator.hasNext()) {
-            final changeSet = changeSetIterator.next();
-            def logEntryIterator = changeSet.iterator();
-            while (logEntryIterator.hasNext()) {
-                final logEntry = logEntryIterator.next()
-                def patten = ~/#[\w\-_\d]+/;
-                def matcher = (logEntry.getMsg() =~ patten);
-                def count = matcher.getCount();
-                for (int i = 0; i < count; i++) {
-                    reqIds += matcher[i].replace('#', '') + ","
-                }
+@NonCPS
+def getRequirementsIds() {
+    def reqIds = "";
+    final changeSets = currentBuild.changeSets
+    echo 'changeset count:' + changeSets.size().toString()
+    final changeSetIterator = changeSets.iterator()
+    while (changeSetIterator.hasNext()) {
+        final changeSet = changeSetIterator.next();
+        def logEntryIterator = changeSet.iterator();
+        while (logEntryIterator.hasNext()) {
+            final logEntry = logEntryIterator.next()
+            def patten = ~/#[\w\-_\d]+/;
+            def matcher = (logEntry.getMsg() =~ patten);
+            def count = matcher.getCount();
+            for (int i = 0; i < count; i++) {
+                reqIds += matcher[i].replace('#', '') + ","
             }
         }
-        return reqIds;
     }
-    @NonCPS
-    def getRevisionIds() {
-        def reqIds = "";
-        final changeSets = currentBuild.changeSets
-        final changeSetIterator = changeSets.iterator()
-        while (changeSetIterator.hasNext()) {
-            final changeSet = changeSetIterator.next();
-            def logEntryIterator = changeSet.iterator();
-            while (logEntryIterator.hasNext()) {
-                final logEntry = logEntryIterator.next()
-                reqIds += logEntry.getRevision() + ","
-            }
+    return reqIds;
+}
+@NonCPS
+def getRevisionIds() {
+    def reqIds = "";
+    final changeSets = currentBuild.changeSets
+    final changeSetIterator = changeSets.iterator()
+    while (changeSetIterator.hasNext()) {
+        final changeSet = changeSetIterator.next();
+        def logEntryIterator = changeSet.iterator();
+        while (logEntryIterator.hasNext()) {
+            final logEntry = logEntryIterator.next()
+            reqIds += logEntry.getRevision() + ","
         }
-        return reqIds
     }
+    return reqIds
+}
