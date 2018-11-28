@@ -156,7 +156,7 @@ node {
                 
                 httpRequest outputFile: '/tmp/apache-tomcat-8.5.35/webapps/demo.war', customHeaders: [[name: 'X-JFrog-Art-Api', value: ARTIFACTORY_API_KEY]], url: getWarUrl
 
-                httpRequest httpMode: 'PUT', consoleLogResponseBody: true, customHeaders: [[name: 'X-JFrog-Art-Api', value: ARTIFACTORY_API_KEY]], url: "${ARTIFACTORY_URL}/api/storage/${PROMOTION_TARGET_REPO}/org/jfrog/test/multi3/3.7-SNAPSHOT/multi3-${warLatestVersion}.war?properties=deploy.tool=ansible;deploy.env=127.0.0.1"
+                httpRequest httpMode: 'PUT', consoleLogResponseBody: true, customHeaders: [[name: 'X-JFrog-Art-Api', value: ARTIFACTORY_API_KEY]], url: "${ARTIFACTORY_URL}api/storage/${PROMOTION_TARGET_REPO}/org/jfrog/test/multi3/3.7-SNAPSHOT/multi3-${warLatestVersion}.war?properties=deploy.tool=ansible;deploy.env=127.0.0.1"
 
                 def stopCmd = "/tmp/apache-tomcat-8.5.35/bin/shutdown.sh"
                 echo stopCmd
