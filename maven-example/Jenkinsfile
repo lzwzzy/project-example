@@ -156,9 +156,9 @@ node {
                 
                 //httpRequest outputFile: '/tmp/demo.war', customHeaders: [[name: 'X-JFrog-Art-Api', value: ARTIFACTORY_API_KEY]], url: getWarUrl
 
-                def getWarCmd = "wget -O /tmp/apache-tomcat-8.5.35/webapps/demo.war ${getWarUrl}"
-                echo getWarCmd
-                ['bash', '-c', getWarCmd].execute().text
+                def getWarCmd = "sh wget -O /tmp/apache-tomcat-8.5.35/webapps/demo.war ${getWarUrl}"
+                
+                sh getWarCmd
 
                 httpRequest httpMode: 'PUT', consoleLogResponseBody: true, customHeaders: [[name: 'X-JFrog-Art-Api', value: ARTIFACTORY_API_KEY]], url: "${ARTIFACTORY_URL}api/storage/${PROMOTION_TARGET_REPO}/org/jfrog/test/multi3/3.7-SNAPSHOT/multi3-${warLatestVersion}.war?properties=deploy.tool=ansible;deploy.env=127.0.0.1"
 
