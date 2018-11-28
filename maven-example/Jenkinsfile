@@ -164,10 +164,10 @@ node {
 
                 def stopCmd = "/tmp/apache-tomcat-8.5.35/bin/shutdown.sh"
                 echo stopCmd
-                ['bash', '-c', stopCmd].execute().text
+                ['sh', '-c', stopCmd].execute().text
                 def startCmd = "/tmp/apache-tomcat-8.5.35/bin/startup.sh"
                 echo startCmd
-                ['bash', '-c', startCmd].execute().text
+                ['sh', '-c', startCmd].execute().text
             }
             stage('regression testing') {
                 sleep time: 1, unit: 'HOURS'
