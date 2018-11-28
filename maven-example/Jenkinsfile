@@ -32,8 +32,9 @@ node {
     def SONAR_PROJECT_KEY = "${JOB_NAME}"
     def SONAR_SOURCES = 'maven-example/multi3/src'
     
-withDockerContainer('jfrogchina/java-sonar-mvn') {
     withEnv(["JAVA_HOME=${ tool 'env-docker-maven-jdk-1.8.0_101' }", "PATH+MAVEN=${tool 'env-docker-maven-maven-3.3.9'}/bin:${env.JAVA_HOME}/bin"]) {
+    withDockerContainer('jfrogchina/java-sonar-mvn') {
+    
 
     echo env.MAVEN_HOME
     //环境配置
