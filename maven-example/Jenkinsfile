@@ -165,6 +165,9 @@ node {
                 echo startCmd
                 ['bash', '-c', startCmd].execute().text
             }
+            stage('regression testing') {
+                httpRequest url: 'http://localhost:8080', consoleLogResponseBody: true
+            }
         }
     }
 
