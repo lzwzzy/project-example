@@ -33,7 +33,7 @@ node {
     def SONAR_SOURCES = 'maven-example/multi3/src'
 
 
-    docker.image('java-mvn-sonar-tomcat').inside {
+    docker.image('java-mvn-sonar-tomcat').inside('--name mvn_demo'){
 
         withEnv(["JAVA_HOME=${ tool 'env-docker-maven-jdk-1.8.0_101' }", "MAVEN_HOME=${tool 'env-docker-maven-maven-3.3.9'}", "PATH+MAVEN=${env.MAVEN_HOME}/bin:${env.JAVA_HOME}/bin"]) {
 
@@ -163,15 +163,15 @@ node {
                 httpRequest httpMode: 'PUT', consoleLogResponseBody: true, customHeaders: [[name: 'X-JFrog-Art-Api', value: ARTIFACTORY_API_KEY]], url: "${ARTIFACTORY_URL}api/storage/${PROMOTION_TARGET_REPO}/org/jfrog/test/multi3/3.7-SNAPSHOT/multi3-${warLatestVersion}.war?properties=deploy.tool=ansible;deploy.env=127.0.0.1"
 
                 def stopCmd = "/tmp/apache-tomcat-8.5.35/bin/shutdown.sh"
-                echo stopCmd
-                ['sh', '-c', stopCmd].execute().text
+                sh stopCmd
                 def startCmd = "/tmp/apache-tomcat-8.5.35/bin/startup.sh"
-                echo startCmd
-                ['sh', '-c', startCmd].execute().text
+                sh startCmd
             }
             stage('regression testing') {
-                sleep time: 1, unit: 'HOURS'
-                httpRequest url: 'http://localhost:8080', consoleLogResponseBody: true
+                def cmd = "docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' mvn_demo"
+		        echo cmd
+		        def ip = [ 'bash', '-c', cmd].execute().text
+                httpRequest url: "http://${ip}:8080", consoleLogResponseBody: true
             }
         }
     }
