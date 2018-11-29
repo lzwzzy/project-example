@@ -49,6 +49,8 @@ node {
 
             stage('SCM') {
                 git(url: GIT_URL, branch: BRANCH, changelog: true, credentialsId: GIT_CREDENTIALS_ID)
+                def pom = readMavenPom file: 'maven-example/pom.xml'
+                echo pom
             }
 
             stage('env capture') {
@@ -109,7 +111,6 @@ node {
                 rtMaven.run pom: POM_PATH, goals: MAVEN_GOALS, buildInfo: buildInfo
             }
             stage('package deploy to aitifactory'){
-                echo env.POM_VERSION
                 rtMaven.deployer.deployArtifacts buildInfo
                 artiServer.publishBuildInfo buildInfo
             }
