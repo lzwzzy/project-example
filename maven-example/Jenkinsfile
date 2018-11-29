@@ -50,7 +50,7 @@ node {
             stage('SCM') {
                 git(url: GIT_URL, branch: BRANCH, changelog: true, credentialsId: GIT_CREDENTIALS_ID)
                 def pom = readMavenPom file: 'maven-example/pom.xml'
-                echo pom
+                echo pom as String
             }
 
             stage('env capture') {
