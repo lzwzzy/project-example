@@ -167,7 +167,7 @@ node {
                 httpRequest httpMode: 'PUT', 
                             consoleLogResponseBody: true, 
                             customHeaders: [[name: 'X-JFrog-Art-Api', value: ARTIFACTORY_API_KEY]],
-                            url: "${ARTIFACTORY_URL}api/storage/${PROMOTION_TARGET_REPO}/${pom.groupId}/${pom.artifactId}/${pom.version}/${pom.artifactId}-${warLatestVersion}.war?properties=deploy.tool=ansible;deploy.env=127.0.0.1"
+                            url: "${ARTIFACTORY_URL}api/storage/${PROMOTION_TARGET_REPO}/org/jfrog/test/${pom.artifactId}/${pom.parent.version}/${pom.artifactId}-${warLatestVersion}.war?properties=deploy.tool=ansible;deploy.env=127.0.0.1"
 
                 def stopCmd = "/tmp/apache-tomcat-8.5.35/bin/shutdown.sh"
                 sh stopCmd
