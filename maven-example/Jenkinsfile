@@ -148,7 +148,7 @@ node {
 
                 def latestVersionUrl = "${ARTIFACTORY_URL}api/search/latestVersion?g=${pom.parent.groupId}&a=${pom.artifactId}&v=${pom.parent.version}&repos=${PROMOTION_TARGET_REPO}"
 
-                def latestVersionUrlResponse = httpRequest consoleLogResponseBody: true, ignoreSslErrors: true, url: latestVersionUrl
+                def latestVersionUrlResponse = httpRequest consoleLogResponseBody: true, customHeaders: [[name: 'X-JFrog-Art-Api', value: ARTIFACTORY_API_KEY]], ignoreSslErrors: true, url: latestVersionUrl
 
                 def warLatestVersion = latestVersionUrlResponse.content
 
