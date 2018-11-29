@@ -146,7 +146,7 @@ node {
             stage('deploy') {
                 def pom = readMavenPom file: 'maven-example/multi3/pom.xml'
 
-                def latestVersionUrl = "${ARTIFACTORY_URL}api/search/latestVersion?g=${pom.parent.groupId.replaceAll(".","/")}&a=${pom.artifactId}&v=${pom.parent.version}&repos=${PROMOTION_TARGET_REPO}"
+                def latestVersionUrl = "${ARTIFACTORY_URL}api/search/latestVersion?g=${pom.parent.groupId.replace(".","/")}&a=${pom.artifactId}&v=${pom.parent.version}&repos=${PROMOTION_TARGET_REPO}"
 
                 def latestVersionUrlResponse = httpRequest consoleLogResponseBody: true, 
                                                            customHeaders: [[name: 'X-JFrog-Art-Api',
