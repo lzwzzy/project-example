@@ -146,13 +146,13 @@ node {
             stage('deploy') {
                 def pom = readMavenPom file: 'maven-example/multi3/pom.xml'
 
-                def latestVersionUrl = "${ARTIFACTORY_URL}api/search/latestVersion?g=${pom.groupId}&a=${pom.artifactId}&v=${pom.version}&repos=${PROMOTION_TARGET_REPO}"
+                def latestVersionUrl = "${ARTIFACTORY_URL}api/search/latestVersion?g=${pom.parent.groupId}&a=${pom.artifactId}&v=${pom.version}&repos=${PROMOTION_TARGET_REPO}"
 
                 def latestVersionUrlResponse = httpRequest consoleLogResponseBody: true, ignoreSslErrors: true, url: latestVersionUrl
 
                 def warLatestVersion = latestVersionUrlResponse.content
 
-                def getWarUrl = "${ARTIFACTORY_URL}${PROMOTION_TARGET_REPO}/${pom.groupId}/${pom.artifactId}/${pom.version}/${pom.artifactId}-${warLatestVersion}.war"
+                def getWarUrl = "${ARTIFACTORY_URL}${PROMOTION_TARGET_REPO}/${pom.parent.groupId}/${pom.artifactId}/${pom.version}/${pom.artifactId}-${warLatestVersion}.war"
                 
                 //httpRequest outputFile: '/tmp/demo.war', customHeaders: [[name: 'X-JFrog-Art-Api', value: ARTIFACTORY_API_KEY]], url: getWarUrl
 
