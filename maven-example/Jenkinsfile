@@ -156,7 +156,7 @@ node {
                 
                 //httpRequest outputFile: '/tmp/demo.war', customHeaders: [[name: 'X-JFrog-Art-Api', value: ARTIFACTORY_API_KEY]], url: getWarUrl
 
-                def getWarCmd = "wget -O /tmp/apache-tomcat-8.5.35/webapps/demo.war ${getWarUrl}"
+                def getWarCmd = "wget --user=${artiServer.username} --password=${artiServer.password} -O /tmp/apache-tomcat-8.5.35/webapps/demo.war ${getWarUrl}"
                 
                 sh getWarCmd
 
