@@ -36,7 +36,7 @@ node {
 
     docker.image('java-mvn-sonar-tomcat').inside{
 
-        withEnv(["JAVA_HOME=${ tool 'env-docker-maven-jdk-1.8.0_101' }", "MAVEN_HOME=${tool 'env-docker-maven-maven-3.3.9'}", "PATH+MAVEN=${env.MAVEN_HOME}/bin:${env.JAVA_HOME}/bin"]) {
+        withEnv(["JAVA_HOME=${ tool 'env-docker-maven-jdk-1.8.0_191' }", "MAVEN_HOME=${tool 'env-docker-maven-maven-3.3.9'}", "PATH+MAVEN=${env.MAVEN_HOME}/bin:${env.JAVA_HOME}/bin"]) {
 
             //环境配置
             stage('Prepare') {
