@@ -181,7 +181,7 @@ node {
                 def cmd = "docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${DOCKER_CONTAINER_NAME}"
 		        echo cmd
 		        def ip = [ 'bash', '-c', cmd].execute().text
-                sh "curl http://${ip.replace("\n","")}:8080"
+                sh "curl http://localhost:8080"
                 httpRequest url: "http://${ip.replaceAll("\n","")}:8080", 
                             consoleLogResponseBody: true
             }
