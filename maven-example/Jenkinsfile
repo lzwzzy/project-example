@@ -34,7 +34,7 @@ node {
     def SONAR_SOURCES = 'maven-example/multi3/src'
 
 
-    docker.image('java-mvn-sonar-tomcat').inside('--name mvn_demo'){
+    docker.image('java-mvn-sonar-tomcat').inside{
 
         withEnv(["JAVA_HOME=${ tool 'env-docker-maven-jdk-1.8.0_101' }", "MAVEN_HOME=${tool 'env-docker-maven-maven-3.3.9'}", "PATH+MAVEN=${env.MAVEN_HOME}/bin:${env.JAVA_HOME}/bin"]) {
 
@@ -49,8 +49,6 @@ node {
 
             stage('SCM') {
                 git(url: GIT_URL, branch: BRANCH, changelog: true, credentialsId: GIT_CREDENTIALS_ID)
-                def pom = readMavenPom file: 'maven-example/pom.xml'
-                echo pom.version as String
             }
 
             stage('env capture') {
@@ -146,14 +144,15 @@ node {
             }
             //进行部署
             stage('deploy') {
+                def pom = readMavenPom file: 'maven-example/multi3/pom.xml'
 
-                def latestVersionUrl = "${ARTIFACTORY_URL}api/search/latestVersion?g=org.jfrog.test&a=multi3&v=3.7-SNAPSHOT&repos=lib-release-local"
+                def latestVersionUrl = "${ARTIFACTORY_URL}api/search/latestVersion?g=${pom.groupId}&a=${pom.artifactId}&v=${pom.version}&repos=${PROMOTION_TARGET_REPO}"
 
                 def latestVersionUrlResponse = httpRequest consoleLogResponseBody: true, ignoreSslErrors: true, url: latestVersionUrl
 
                 def warLatestVersion = latestVersionUrlResponse.content
 
-                def getWarUrl = "${ARTIFACTORY_URL}${PROMOTION_TARGET_REPO}/org/jfrog/test/multi3/3.7-SNAPSHOT/multi3-${warLatestVersion}.war"
+                def getWarUrl = "${ARTIFACTORY_URL}${PROMOTION_TARGET_REPO}/${pom.groupId}/${pom.artifactId}/${pom.version}/${pom.artifactId}-${warLatestVersion}.war"
                 
                 //httpRequest outputFile: '/tmp/demo.war', customHeaders: [[name: 'X-JFrog-Art-Api', value: ARTIFACTORY_API_KEY]], url: getWarUrl
 
@@ -161,7 +160,7 @@ node {
                 
                 sh getWarCmd
 
-                httpRequest httpMode: 'PUT', consoleLogResponseBody: true, customHeaders: [[name: 'X-JFrog-Art-Api', value: ARTIFACTORY_API_KEY]], url: "${ARTIFACTORY_URL}api/storage/${PROMOTION_TARGET_REPO}/org/jfrog/test/multi3/3.7-SNAPSHOT/multi3-${warLatestVersion}.war?properties=deploy.tool=ansible;deploy.env=127.0.0.1"
+                httpRequest httpMode: 'PUT', consoleLogResponseBody: true, customHeaders: [[name: 'X-JFrog-Art-Api', value: ARTIFACTORY_API_KEY]], url: "${ARTIFACTORY_URL}api/storage/${PROMOTION_TARGET_REPO}/${pom.groupId}/${pom.artifactId}/${pom.version}/${pom.artifactId}-${warLatestVersion}.war?properties=deploy.tool=ansible;deploy.env=127.0.0.1"
 
                 def stopCmd = "/tmp/apache-tomcat-8.5.35/bin/shutdown.sh"
                 sh stopCmd
@@ -169,9 +168,10 @@ node {
                 sh startCmd
             }
             stage('regression testing') {
-                def cmd = "docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' mvn_demo"
+                def cmd = "docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${Container.id}"
 		        echo cmd
 		        def ip = [ 'bash', '-c', cmd].execute().text
+                sleep time: 1, unit: 'HOURS'
                 httpRequest url: "http://${ip.replaceAll("\n","")}:8080", consoleLogResponseBody: true
             }
         }
