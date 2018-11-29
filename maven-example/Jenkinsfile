@@ -33,8 +33,11 @@ node {
     def SONAR_PROJECT_KEY = "${JOB_NAME}"
     def SONAR_SOURCES = 'maven-example/multi3/src'
 
+    //docker
+    def DOCKER_CONTAINER_NAME = 'maven-example'
 
-    docker.image('java-mvn-sonar-tomcat').inside{
+
+    docker.image('java-mvn-sonar-tomcat').inside("--name ${DOCKER_CONTAINER_NAME}"){
 
         withEnv(["JAVA_HOME=${ tool 'env-docker-maven-jdk-1.8.0_191' }", "MAVEN_HOME=${tool 'env-docker-maven-maven-3.3.9'}", "PATH+MAVEN=${env.MAVEN_HOME}/bin:${env.JAVA_HOME}/bin"]) {
 
@@ -175,10 +178,11 @@ node {
                 sh startCmd
             }
             stage('regression testing') {
-                def cmd = "docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${Container.id}"
+                def cmd = "docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${DOCKER_CONTAINER_NAME}"
 		        echo cmd
 		        def ip = [ 'bash', '-c', cmd].execute().text
-                sleep time: 1, unit: 'HOURS'
+                
+                sh "curl http://${ip.replaceAll("\n","")}:8080"
                 httpRequest url: "http://${ip.replaceAll("\n","")}:8080", 
                             consoleLogResponseBody: true
             }
