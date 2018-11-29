@@ -109,7 +109,7 @@ node {
                 rtMaven.run pom: POM_PATH, goals: MAVEN_GOALS, buildInfo: buildInfo
             }
             stage('package deploy to aitifactory'){
-                echo descriptor.version as String
+                echo env.POM_VERSION
                 rtMaven.deployer.deployArtifacts buildInfo
                 artiServer.publishBuildInfo buildInfo
             }
