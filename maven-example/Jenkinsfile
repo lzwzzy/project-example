@@ -182,7 +182,7 @@ node {
 		        echo cmd
 		        def ip = [ 'bash', '-c', cmd].execute().text
                 sleep time: 1, unit: 'HOURS'
-                sh "curl http://${ip.replaceAll("\n","")}:8080"
+                sh "curl http://${ip.replace("\n","")}:8080"
                 httpRequest url: "http://${ip.replaceAll("\n","")}:8080", 
                             consoleLogResponseBody: true
             }
