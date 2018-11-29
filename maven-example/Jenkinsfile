@@ -5,6 +5,7 @@ node {
     def artiServer = Artifactory.server 'art'
     def rtMaven = Artifactory.newMavenBuild()
     def buildInfo = Artifactory.newBuildInfo()
+    def descriptor = Artifactory.mavenDescriptor()
     def ARTIFACTORY_URL = 'http://139.199.24.190:8081/artifactory/'
     def ARTIFACTORY_API_KEY = 'AKCp5btVgWHzgQBTpRC4JEH4gGR5Mj3fq6n33rUEwJv7v7V2JxbEbwL1T6AKaaqBxCmHcYQva'
     def RESOLVE_SNAPSHOT_REPO = 'lib-snapshot'
@@ -37,8 +38,6 @@ node {
 
         withEnv(["JAVA_HOME=${ tool 'env-docker-maven-jdk-1.8.0_101' }", "MAVEN_HOME=${tool 'env-docker-maven-maven-3.3.9'}", "PATH+MAVEN=${env.MAVEN_HOME}/bin:${env.JAVA_HOME}/bin"]) {
 
-            echo env.JAVA_HOME
-            echo env.MAVEN_HOME
             //环境配置
             stage('Prepare') {
 
@@ -110,6 +109,7 @@ node {
                 rtMaven.run pom: POM_PATH, goals: MAVEN_GOALS, buildInfo: buildInfo
             }
             stage('package deploy to aitifactory'){
+                echo descriptor.version as String
                 rtMaven.deployer.deployArtifacts buildInfo
                 artiServer.publishBuildInfo buildInfo
             }
@@ -120,8 +120,8 @@ node {
 
             stage('xray scan') {
                 def xrayConfig = [
-                        'buildName'  : env.JOB_NAME,
-                        'buildNumber': env.BUILD_NUMBER,
+                        'buildName'  : buildInfo.name,
+                        'buildNumber': buildInfo.number,
                         'failBuild'  : false
                 ]
                 def xrayResults = artiServer.xrayScan xrayConfig
