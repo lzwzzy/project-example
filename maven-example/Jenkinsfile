@@ -171,7 +171,7 @@ node {
                 def cmd = "docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' mvn_demo"
 		        echo cmd
 		        def ip = [ 'bash', '-c', cmd].execute().text
-                httpRequest url: "http://${ip}:8080", consoleLogResponseBody: true
+                httpRequest url: "http://${ip.replaceAll("\n","")}:8080", consoleLogResponseBody: true
             }
         }
     }
