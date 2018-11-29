@@ -148,7 +148,11 @@ node {
 
                 def latestVersionUrl = "${ARTIFACTORY_URL}api/search/latestVersion?g=${pom.parent.groupId}&a=${pom.artifactId}&v=${pom.parent.version}&repos=${PROMOTION_TARGET_REPO}"
 
-                def latestVersionUrlResponse = httpRequest consoleLogResponseBody: true, customHeaders: [[name: 'X-JFrog-Art-Api', value: ARTIFACTORY_API_KEY]], ignoreSslErrors: true, url: latestVersionUrl
+                def latestVersionUrlResponse = httpRequest consoleLogResponseBody: true, 
+                                                           customHeaders: [[name: 'X-JFrog-Art-Api',
+                                                           value: ARTIFACTORY_API_KEY]], 
+                                                           ignoreSslErrors: true, 
+                                                           url: latestVersionUrl
 
                 def warLatestVersion = latestVersionUrlResponse.content
 
@@ -160,7 +164,10 @@ node {
                 
                 sh getWarCmd
 
-                httpRequest httpMode: 'PUT', consoleLogResponseBody: true, customHeaders: [[name: 'X-JFrog-Art-Api', value: ARTIFACTORY_API_KEY]], url: "${ARTIFACTORY_URL}api/storage/${PROMOTION_TARGET_REPO}/${pom.groupId}/${pom.artifactId}/${pom.version}/${pom.artifactId}-${warLatestVersion}.war?properties=deploy.tool=ansible;deploy.env=127.0.0.1"
+                httpRequest httpMode: 'PUT', 
+                            consoleLogResponseBody: true, 
+                            customHeaders: [[name: 'X-JFrog-Art-Api', value: ARTIFACTORY_API_KEY]],
+                            url: "${ARTIFACTORY_URL}api/storage/${PROMOTION_TARGET_REPO}/${pom.groupId}/${pom.artifactId}/${pom.version}/${pom.artifactId}-${warLatestVersion}.war?properties=deploy.tool=ansible;deploy.env=127.0.0.1"
 
                 def stopCmd = "/tmp/apache-tomcat-8.5.35/bin/shutdown.sh"
                 sh stopCmd
@@ -172,7 +179,8 @@ node {
 		        echo cmd
 		        def ip = [ 'bash', '-c', cmd].execute().text
                 sleep time: 1, unit: 'HOURS'
-                httpRequest url: "http://${ip.replaceAll("\n","")}:8080", consoleLogResponseBody: true
+                httpRequest url: "http://${ip.replaceAll("\n","")}:8080", 
+                            consoleLogResponseBody: true
             }
         }
     }
