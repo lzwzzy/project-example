@@ -174,7 +174,7 @@ node {
 
                 // def stopCmd = "/tmp/apache-tomcat-8.5.35/bin/shutdown.sh"
                 // sh stopCmd
-                def startCmd = "/tmp/apache-tomcat-8.5.35/bin/startup.sh"
+                def startCmd = "sh /tmp/apache-tomcat-8.5.35/bin/startup.sh"
                 sh startCmd
             }
             stage('regression testing') {
