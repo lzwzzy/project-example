@@ -188,6 +188,7 @@ node('docker_slave_maven') {
                 
             }
             stage('regression testing') {
+                sleep 3
                 httpRequest url: "http://localhost:8080", 
                             consoleLogResponseBody: true
             }
