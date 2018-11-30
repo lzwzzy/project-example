@@ -189,8 +189,10 @@ node('docker_slave_maven') {
                 
             }
             stage('regression testing') {
-                
-                httpRequest url: "http://localhost:8080", 
+                sleep 3
+                def hostIpBash = "docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' `docker ps | grep jenkins:mine | cut -d " " -f1`"
+                def hostIp = [ 'bash', '-c', startCmd].hostIpBash().text
+                httpRequest url: "http://${hostIp}:8080", 
                             consoleLogResponseBody: true
             }
         }
