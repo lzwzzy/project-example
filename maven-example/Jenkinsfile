@@ -128,31 +128,31 @@ node('docker_slave_maven') {
                 echo "add test step"
             }
 
-            stage('xray scan') {
-                def xrayConfig = [
-                        'buildName'  : buildInfo.name,
-                        'buildNumber': buildInfo.number,
-                        'failBuild'  : false
-                ]
-                def xrayResults = artiServer.xrayScan xrayConfig
-                echo xrayResults as String
-            }
+            // stage('xray scan') {
+            //     def xrayConfig = [
+            //             'buildName'  : buildInfo.name,
+            //             'buildNumber': buildInfo.number,
+            //             'failBuild'  : false
+            //     ]
+            //     def xrayResults = artiServer.xrayScan xrayConfig
+            //     echo xrayResults as String
+            // }
 
-            //promotion操作，进行包的升级
-            stage('promotion') {
-                def promotionConfig = [
-                        'buildName'          : buildInfo.name,
-                        'buildNumber'        : buildInfo.number,
-                        'targetRepo'         : PROMOTION_TARGET_REPO,
-                        'comment'            : 'this is the promotion comment',
-                        'sourceRepo'         : PROMOTION_SOURCE_REPO,
-                        'status'             : 'Released',
-                        'includeDependencies': false,
-                        'failFast'           : true,
-                        'copy'               : true
-                ]
-                artiServer.promote promotionConfig
-            }
+            // //promotion操作，进行包的升级
+            // stage('promotion') {
+            //     def promotionConfig = [
+            //             'buildName'          : buildInfo.name,
+            //             'buildNumber'        : buildInfo.number,
+            //             'targetRepo'         : PROMOTION_TARGET_REPO,
+            //             'comment'            : 'this is the promotion comment',
+            //             'sourceRepo'         : PROMOTION_SOURCE_REPO,
+            //             'status'             : 'Released',
+            //             'includeDependencies': false,
+            //             'failFast'           : true,
+            //             'copy'               : true
+            //     ]
+            //     artiServer.promote promotionConfig
+            // }
             //进行部署
             stage('deploy') {
                 def pom = readMavenPom file: 'maven-example/multi3/pom.xml'
