@@ -177,7 +177,7 @@ node('docker_slave_maven') {
                 // def stopCmd = "/tmp/apache-tomcat-8.5.35/bin/shutdown.sh"
                 // sh stopCmd
                 //启动服务
-                def startCmd = "/tmp/apache-tomcat-8.5.35/bin/startup.sh"
+                def startCmd = "sh /tmp/apache-tomcat-8.5.35/bin/startup.sh"
 
                 [ 'bash', '-c', startCmd].execute().text
                 //添加元数据
