@@ -114,45 +114,45 @@ node('docker_slave_maven') {
                 echo "revisionIds : ${revisionIds}"
                 rtMaven.deployer.addProperty("project.issues", requirements).addProperty("project.revisionIds", revisionIds)
             }
-            //maven 构建
-            // stage('mvn build') {
-            //     rtMaven.deployer.deployArtifacts = false
-            //     rtMaven.run pom: POM_PATH, goals: MAVEN_GOALS, buildInfo: buildInfo
-            // }
-            // stage('package deploy to aitifactory'){
-            //     rtMaven.deployer.deployArtifacts buildInfo
-            //     artiServer.publishBuildInfo buildInfo
-            // }
+            maven 构建
+            stage('mvn build') {
+                rtMaven.deployer.deployArtifacts = false
+                rtMaven.run pom: POM_PATH, goals: MAVEN_GOALS, buildInfo: buildInfo
+            }
+            stage('package deploy to aitifactory'){
+                rtMaven.deployer.deployArtifacts buildInfo
+                artiServer.publishBuildInfo buildInfo
+            }
             //进行测试
             stage('basic test') {
                 echo "add test step"
             }
 
-            // stage('xray scan') {
-            //     def xrayConfig = [
-            //             'buildName'  : buildInfo.name,
-            //             'buildNumber': buildInfo.number,
-            //             'failBuild'  : false
-            //     ]
-            //     def xrayResults = artiServer.xrayScan xrayConfig
-            //     echo xrayResults as String
-            // }
+            stage('xray scan') {
+                def xrayConfig = [
+                        'buildName'  : buildInfo.name,
+                        'buildNumber': buildInfo.number,
+                        'failBuild'  : false
+                ]
+                def xrayResults = artiServer.xrayScan xrayConfig
+                echo xrayResults as String
+            }
 
-            // //promotion操作，进行包的升级
-            // stage('promotion') {
-            //     def promotionConfig = [
-            //             'buildName'          : buildInfo.name,
-            //             'buildNumber'        : buildInfo.number,
-            //             'targetRepo'         : PROMOTION_TARGET_REPO,
-            //             'comment'            : 'this is the promotion comment',
-            //             'sourceRepo'         : PROMOTION_SOURCE_REPO,
-            //             'status'             : 'Released',
-            //             'includeDependencies': false,
-            //             'failFast'           : true,
-            //             'copy'               : true
-            //     ]
-            //     artiServer.promote promotionConfig
-            // }
+            //promotion操作，进行包的升级
+            stage('promotion') {
+                def promotionConfig = [
+                        'buildName'          : buildInfo.name,
+                        'buildNumber'        : buildInfo.number,
+                        'targetRepo'         : PROMOTION_TARGET_REPO,
+                        'comment'            : 'this is the promotion comment',
+                        'sourceRepo'         : PROMOTION_SOURCE_REPO,
+                        'status'             : 'Released',
+                        'includeDependencies': false,
+                        'failFast'           : true,
+                        'copy'               : true
+                ]
+                artiServer.promote promotionConfig
+            }
             //进行部署
             stage('deploy') {
                 def pom = readMavenPom file: 'maven-example/multi3/pom.xml'
@@ -188,7 +188,6 @@ node('docker_slave_maven') {
                 
             }
             stage('regression testing') {
-                sleep 3
                 httpRequest url: "http://localhost:8080", 
                             consoleLogResponseBody: true
             }
