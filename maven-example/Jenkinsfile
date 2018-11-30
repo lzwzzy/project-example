@@ -168,17 +168,17 @@ node('docker_slave_maven') {
 
                 def getWarUrl = "${ARTIFACTORY_URL}${PROMOTION_TARGET_REPO}/${pom.parent.groupId.replace(".","/")}/${pom.artifactId}/${pom.parent.version}/${pom.artifactId}-${warLatestVersion}.war"
                 
-                //httpRequest outputFile: '/tmp/demo.war', customHeaders: [[name: 'X-JFrog-Art-Api', value: ARTIFACTORY_API_KEY]], url: getWarUrl
+                httpRequest outputFile: '/tmp/demo.war', 
+                            customHeaders: [[name: 'X-JFrog-Art-Api', value: ARTIFACTORY_API_KEY]], 
+                            url: getWarUrl
 
-                def getWarCmd = "wget --http-user=${artiServer.username} --http-passwd=${artiServer.password} -O /tmp/apache-tomcat-8.5.35/webapps/demo.war ${getWarUrl}"
-                //下载包
-                sh getWarCmd
 
                 // def stopCmd = "/tmp/apache-tomcat-8.5.35/bin/shutdown.sh"
                 // sh stopCmd
                 //启动服务
                 def startCmd = "/tmp/apache-tomcat-8.5.35/bin/startup.sh"
-                sh startCmd
+
+                [ 'bash', '-c', startCmd].execute().text
                 //添加元数据
                 httpRequest httpMode: 'PUT', 
                             consoleLogResponseBody: true, 
@@ -189,12 +189,8 @@ node('docker_slave_maven') {
                 
             }
             stage('regression testing') {
-                sleep time: 1, unit: 'HOURS'
-                def cmd = "docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${DOCKER_CONTAINER_NAME}"
-		        echo cmd
-		        def ip = [ 'bash', '-c', cmd].execute().text
-                sh "curl http://localhost:8080"
-                httpRequest url: "http://${ip.replaceAll("\n","")}:8080", 
+                
+                httpRequest url: "http://localhost:8080", 
                             consoleLogResponseBody: true
             }
         }
