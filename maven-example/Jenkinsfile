@@ -115,14 +115,14 @@ node('docker_slave_maven') {
                 rtMaven.deployer.addProperty("project.issues", requirements).addProperty("project.revisionIds", revisionIds)
             }
             //maven 构建
-            stage('mvn build') {
-                rtMaven.deployer.deployArtifacts = false
-                rtMaven.run pom: POM_PATH, goals: MAVEN_GOALS, buildInfo: buildInfo
-            }
-            stage('package deploy to aitifactory'){
-                rtMaven.deployer.deployArtifacts buildInfo
-                artiServer.publishBuildInfo buildInfo
-            }
+            // stage('mvn build') {
+            //     rtMaven.deployer.deployArtifacts = false
+            //     rtMaven.run pom: POM_PATH, goals: MAVEN_GOALS, buildInfo: buildInfo
+            // }
+            // stage('package deploy to aitifactory'){
+            //     rtMaven.deployer.deployArtifacts buildInfo
+            //     artiServer.publishBuildInfo buildInfo
+            // }
             //进行测试
             stage('basic test') {
                 echo "add test step"
@@ -169,7 +169,7 @@ node('docker_slave_maven') {
 
                 def getWarUrl = "${ARTIFACTORY_URL}${PROMOTION_TARGET_REPO}/${pom.parent.groupId.replace(".","/")}/${pom.artifactId}/${pom.parent.version}/${pom.artifactId}-${warLatestVersion}.war"
                 
-                httpRequest outputFile: '/tmp/demo.war', 
+                httpRequest outputFile: '/tmp/apache-tomcat-8.5.35/webapps/demo.war', 
                             customHeaders: [[name: 'X-JFrog-Art-Api', value: ARTIFACTORY_API_KEY]], 
                             url: getWarUrl
 
@@ -185,8 +185,6 @@ node('docker_slave_maven') {
                             consoleLogResponseBody: true, 
                             customHeaders: [[name: 'X-JFrog-Art-Api', value: ARTIFACTORY_API_KEY]],
                             url: "${ARTIFACTORY_URL}api/storage/${PROMOTION_TARGET_REPO}/${pom.parent.groupId.replace(".","/")}/${pom.artifactId}/${pom.parent.version}/${pom.artifactId}-${warLatestVersion}.war?properties=deploy.tool=ansible;deploy.env=127.0.0.1"
-
-                
                 
             }
             stage('regression testing') {
