@@ -1,5 +1,5 @@
 
-node {
+node('docker_slave_maven') {
 
     //artifactory
     def artiServer = Artifactory.server 'art'
@@ -37,7 +37,7 @@ node {
     def DOCKER_CONTAINER_NAME = 'maven-example'
 
 
-    docker.image('java-mvn-sonar-tomcat').inside("--name ${DOCKER_CONTAINER_NAME}"){
+    // docker.image('java-mvn-sonar-tomcat').inside("--name ${DOCKER_CONTAINER_NAME}"){
 
         withEnv(["JAVA_HOME=${ tool 'env-docker-maven-jdk-1.8.0_191' }", "MAVEN_HOME=${tool 'env-docker-maven-maven-3.3.9'}", "PATH+MAVEN=${env.MAVEN_HOME}/bin:${env.JAVA_HOME}/bin"]) {
 
@@ -45,13 +45,20 @@ node {
             stage('Prepare') {
 
                 echo "环境准备"
-                rtMaven.resolver server: artiServer, releaseRepo: RESOLVE_RELEASE_REPO, snapshotRepo: RESOLVE_SNAPSHOT_REPO
-                rtMaven.deployer server: artiServer, releaseRepo: DEPLOY_RELEASE_REPO, snapshotRepo: DEPLOY_SNAPSHOT_REPO
+                rtMaven.resolver server: artiServer, 
+                                 releaseRepo: RESOLVE_RELEASE_REPO,
+                                 snapshotRepo: RESOLVE_SNAPSHOT_REPO
+                rtMaven.deployer server: artiServer,
+                                 releaseRepo: DEPLOY_RELEASE_REPO, 
+                                 snapshotRepo: DEPLOY_SNAPSHOT_REPO
                 // rtMaven.tool = MAVEN_TOOL
             }
 
             stage('SCM') {
-                git(url: GIT_URL, branch: BRANCH, changelog: true, credentialsId: GIT_CREDENTIALS_ID)
+                git url: GIT_URL, 
+                    branch: BRANCH, 
+                    changelog: true, 
+                    credentialsId: GIT_CREDENTIALS_ID
             }
 
             stage('env capture') {
@@ -164,20 +171,25 @@ node {
                 //httpRequest outputFile: '/tmp/demo.war', customHeaders: [[name: 'X-JFrog-Art-Api', value: ARTIFACTORY_API_KEY]], url: getWarUrl
 
                 def getWarCmd = "wget --http-user=${artiServer.username} --http-passwd=${artiServer.password} -O /tmp/apache-tomcat-8.5.35/webapps/demo.war ${getWarUrl}"
-                
+                //下载包
                 sh getWarCmd
 
+                // def stopCmd = "/tmp/apache-tomcat-8.5.35/bin/shutdown.sh"
+                // sh stopCmd
+                //启动服务
+                def startCmd = "/tmp/apache-tomcat-8.5.35/bin/startup.sh"
+                sh startCmd
+                //添加元数据
                 httpRequest httpMode: 'PUT', 
                             consoleLogResponseBody: true, 
                             customHeaders: [[name: 'X-JFrog-Art-Api', value: ARTIFACTORY_API_KEY]],
                             url: "${ARTIFACTORY_URL}api/storage/${PROMOTION_TARGET_REPO}/${pom.parent.groupId.replace(".","/")}/${pom.artifactId}/${pom.parent.version}/${pom.artifactId}-${warLatestVersion}.war?properties=deploy.tool=ansible;deploy.env=127.0.0.1"
 
-                // def stopCmd = "/tmp/apache-tomcat-8.5.35/bin/shutdown.sh"
-                // sh stopCmd
-                def startCmd = "sh /tmp/apache-tomcat-8.5.35/bin/startup.sh"
-                sh startCmd
+                
+                
             }
             stage('regression testing') {
+                sleep time: 1, unit: 'HOURS'
                 def cmd = "docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${DOCKER_CONTAINER_NAME}"
 		        echo cmd
 		        def ip = [ 'bash', '-c', cmd].execute().text
@@ -186,7 +198,7 @@ node {
                             consoleLogResponseBody: true
             }
         }
-    }
+    // }
 
 }
 
