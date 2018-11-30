@@ -191,9 +191,9 @@ node('docker_slave_maven') {
             }
             stage('regression testing') {
                 sleep 3
-                def hostIpBash = "docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' `docker ps | grep ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG} | cut -d " " -f1`"
-                def hostIp = [ 'bash', '-c', startCmd].hostIpBash().text
-                httpRequest url: "http://${hostIp}:8080", 
+                // def hostIpBash = "docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' `docker ps | grep ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG} | cut -d " " -f1`"
+                // def hostIp = [ 'bash', '-c', startCmd].hostIpBash().text
+                httpRequest url: "http://localhost:8080", 
                             consoleLogResponseBody: true
             }
         }
