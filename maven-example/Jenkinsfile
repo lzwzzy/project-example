@@ -114,7 +114,7 @@ node('docker_slave_maven') {
                 echo "revisionIds : ${revisionIds}"
                 rtMaven.deployer.addProperty("project.issues", requirements).addProperty("project.revisionIds", revisionIds)
             }
-            maven 构建
+            //maven 构建
             stage('mvn build') {
                 rtMaven.deployer.deployArtifacts = false
                 rtMaven.run pom: POM_PATH, goals: MAVEN_GOALS, buildInfo: buildInfo
