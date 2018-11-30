@@ -44,9 +44,9 @@ node('docker_slave_gradle') {
 
                 echo "环境准备"
                 rtGradle.resolver server: artiServer, 
-                                  repo: RESOLVE_RELEASE_REPO
+                                  repo: RESOLVE_SNAPSHOT_REPO
                 rtGradle.deployer server: artiServer,
-                                  repo: DEPLOY_RELEASE_REPO
+                                  repo: DEPLOY_SNAPSHOT_REPO
                 rtGradle.tool = GRADLE_TOOL
             }
 
