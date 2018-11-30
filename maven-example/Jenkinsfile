@@ -177,9 +177,9 @@ node('docker_slave_maven') {
                 // def stopCmd = "/tmp/apache-tomcat-8.5.35/bin/shutdown.sh"
                 // sh stopCmd
                 //启动服务
-                def startCmd = "sh /tmp/apache-tomcat-8.5.35/bin/startup.sh"
+                def startCmd = "/tmp/apache-tomcat-8.5.35/bin/startup.sh"
 
-                [ 'bash', '-c', startCmd].execute().text
+                sh startCmd
                 //添加元数据
                 httpRequest httpMode: 'PUT', 
                             consoleLogResponseBody: true, 
@@ -189,8 +189,6 @@ node('docker_slave_maven') {
             }
             stage('regression testing') {
                 sleep 3
-                // def hostIpBash = "docker inspect --format='{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' `docker ps | grep ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG} | cut -d " " -f1`"
-                // def hostIp = [ 'bash', '-c', startCmd].hostIpBash().text
                 httpRequest url: "http://localhost:8080", 
                             consoleLogResponseBody: true
             }
