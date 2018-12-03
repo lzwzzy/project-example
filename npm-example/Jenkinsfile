@@ -26,7 +26,7 @@ node('docker_slave_node') {
     def SONAR_SERVER = 'sonar'
     def SONAR_SCANNER_TOOL = 'sonar-scanner-2.6.1'
     def SONAR_PROJECT_KEY = "${JOB_NAME}"
-    def SONAR_SOURCES = '.'
+    def SONAR_SOURCES = 'npm-example/.'
 
     
 
@@ -107,12 +107,18 @@ node('docker_slave_node') {
             }
             //构建
             stage('npm build') {
-                sh "npm install"
-                sh "npm run build"
+                dir('npm-example') {
+                    sh "npm install"
+                    sh "npm run build"
+                }
+                
             }
             stage('package deploy to aitifactory'){
-                sh "npm publish --registry ${DEPLOY_SNAPSHOT_REPO}/api/npm/npm-lib-snapshot/"
-                artiServer.publishBuildInfo buildInfo
+                dir('npm-example') {
+                    sh "npm publish --registry ${DEPLOY_SNAPSHOT_REPO}/api/npm/npm-lib-snapshot/"
+                    artiServer.publishBuildInfo buildInfo
+                }
+                
             }
             //进行测试
             stage('basic test') {
