@@ -1,5 +1,5 @@
 
-node('docker_slave_maven') {
+node('docker_slave_node') {
 
     //artifactory
     def artiServer = Artifactory.server 'art'
