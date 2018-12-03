@@ -40,8 +40,8 @@ node('docker_slave_node') {
 
                 echo "环境准备"
                 sh "npm config set registry ${ARTIFACTORY_URL}/api/npm/${RESOLVE_SNAPSHOT_REPO}/"
-                writeFile file: '~/.npmrc', text: '_auth = YWRtaW46QVA4VFNQMUU3N1AzSzFFWnpjbUpqWnd2ZFp0
-                                                   email = 1129459766@qq.com
+                writeFile file: '~/.npmrc', text: '_auth = YWRtaW46QVA4VFNQMUU3N1AzSzFFWnpjbUpqWnd2ZFp0 \n
+                                                   email = 1129459766@qq.com \n
                                                    always-auth = true'
             }
 
