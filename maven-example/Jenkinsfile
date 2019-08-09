@@ -6,8 +6,8 @@ node('node-platform') {
     def rtMaven = Artifactory.newMavenBuild()
     def buildInfo = Artifactory.newBuildInfo()
     def descriptor = Artifactory.mavenDescriptor()
-    def ARTIFACTORY_URL = 'http://139.199.24.190:8081/artifactory/'
-    def ARTIFACTORY_API_KEY = 'AKCp5btVgWHzgQBTpRC4JEH4gGR5Mj3fq6n33rUEwJv7v7V2JxbEbwL1T6AKaaqBxCmHcYQva'
+    def ARTIFACTORY_URL = 'http://47.102.85.76:8081/artifactory'
+    def ARTIFACTORY_API_KEY = 'AKCp5dKsiYV92YFvBcfXZo2SwNK1EAs3h5jV5Jj2tnEDcc6csFSSgkJRNx8jbS73MbxXC3byj'
     def RESOLVE_SNAPSHOT_REPO = 'lib-snapshot'
     def RESOLVE_RELEASE_REPO = 'lib-release'
     def DEPLOY_SNAPSHOT_REPO = 'lib-snapshot'
@@ -22,9 +22,9 @@ node('node-platform') {
     def POM_PATH = 'maven-example/pom.xml'
 
     //git
-    def GIT_URL = 'https://github.com/JFrogChina/project-example.git'
+    def GIT_URL = 'https://github.com/georgedriver/project-example.git'
     def BRANCH = 'master'
-    def GIT_CREDENTIALS_ID = 'my-git-hub'
+    def GIT_CREDENTIALS_ID = 'Jenkins-dummy-admin-token'
 
     //sonar
     def SONAR_HOST_URL = 'http://172.17.3.86:9000'
@@ -40,7 +40,7 @@ node('node-platform') {
 
     // docker.image('java-mvn-sonar-tomcat').inside("--name ${DOCKER_CONTAINER_NAME}"){
 
-        withEnv(["JAVA_HOME=${ tool 'env-docker-maven-jdk-1.8.0_191' }", "MAVEN_HOME=${tool 'env-docker-maven-maven-3.3.9'}", "PATH+MAVEN=${env.MAVEN_HOME}/bin:${env.JAVA_HOME}/bin"]) {
+        withEnv(["JAVA_HOME=${ tool 'jdk1.8' }", "MAVEN_HOME=${tool '3.3.9'}", "PATH+MAVEN=${env.MAVEN_HOME}/bin:${env.JAVA_HOME}/bin"]) {
 
             //环境配置
             stage('Prepare') {
@@ -67,15 +67,15 @@ node('node-platform') {
                 buildInfo.env.capture = true
             }
             //Sonar 静态代码扫描
-            stage('Sonar') {
+            //stage('Sonar') {
                 // Sonar scan
-                def scannerHome = tool SONAR_SCANNER_TOOL;
-                withSonarQubeEnv(SONAR_SERVER) {
-                    sh "${scannerHome}/bin/sonar-runner -Dsonar.language=java -Dsonar.projectKey=${JOB_NAME} -Dsonar.sources=${SONAR_SOURCES} -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.java.binaries=*"
-                }
-            }
+            //    def scannerHome = tool SONAR_SCANNER_TOOL;
+            //    withSonarQubeEnv(SONAR_SERVER) {
+            //        sh "${scannerHome}/bin/sonar-runner -Dsonar.language=java -Dsonar.projectKey=${JOB_NAME} -Dsonar.sources=${SONAR_SOURCES} -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.java.binaries=*"
+            //    }
+            //}
             //添加sonar扫描结果到包上
-            stage("Sonar Quality Gate") {
+            //stage("Sonar Quality Gate") {
 
                 timeout(time: 1, unit: 'HOURS') {
                     // Just in case something goes wrong, pipeline will be killed after a timeout
