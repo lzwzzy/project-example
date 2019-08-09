@@ -40,7 +40,7 @@ node('node-platform') {
 
     // docker.image('java-mvn-sonar-tomcat').inside("--name ${DOCKER_CONTAINER_NAME}"){
 
-        withEnv(["JAVA_HOME=${ tool '1.8' }", "MAVEN_HOME=${tool '3.3.9'}", "PATH+MAVEN=${env.MAVEN_HOME}/bin:${env.JAVA_HOME}/bin"]) {
+        withEnv(["JAVA_HOME=${ tool 'jdk1.8' }", "MAVEN_HOME=${tool '3.3.9'}", "PATH+MAVEN=${env.MAVEN_HOME}/bin:${env.JAVA_HOME}/bin"]) {
 
             //环境配置
             stage('Prepare') {
@@ -68,44 +68,44 @@ node('node-platform') {
             }
             //Sonar 静态代码扫描
             stage('Sonar') {
-                // Sonar scan
-                def scannerHome = tool SONAR_SCANNER_TOOL;
-                withSonarQubeEnv(SONAR_SERVER) {
-                    sh "${scannerHome}/bin/sonar-runner -Dsonar.language=java -Dsonar.projectKey=${JOB_NAME} -Dsonar.sources=${SONAR_SOURCES} -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.java.binaries=*"
-                }
-            }
+            //     // Sonar scan
+            //     def scannerHome = tool SONAR_SCANNER_TOOL;
+            //     withSonarQubeEnv(SONAR_SERVER) {
+            //         sh "${scannerHome}/bin/sonar-runner -Dsonar.language=java -Dsonar.projectKey=${JOB_NAME} -Dsonar.sources=${SONAR_SOURCES} -Dsonar.host.url=${SONAR_HOST_URL} -Dsonar.java.binaries=*"
+            //     }
+            // }
             //添加sonar扫描结果到包上
-            stage("Sonar Quality Gate") {
+            // stage("Sonar Quality Gate") {
 
-                timeout(time: 1, unit: 'HOURS') {
-                    // Just in case something goes wrong, pipeline will be killed after a timeout
-                    def qg = waitForQualityGate() // Reuse taskId previously collected by withSonarQubeEnv
-                    if (qg.status != 'OK') {
-                        error "Pipeline aborted due to quality gate failure: ${qg.status}"
-                    } else {
-                        //获取sonar扫描结果
-                        def surl="${SONAR_HOST_URL}/api/measures/component?componentKey=${SONAR_PROJECT_KEY}&metricKeys=alert_status,quality_gate_details,coverage,new_coverage,bugs,new_bugs,reliability_rating,vulnerabilities,new_vulnerabilities,security_rating,sqale_rating,sqale_index,sqale_debt_ratio,new_sqale_debt_ratio,duplicated_lines_density&additionalFields=metrics,periods"
-                        def response=httpRequest consoleLogResponseBody: true, contentType: 'APPLICATION_JSON', ignoreSslErrors: true, url: surl
+            //     timeout(time: 1, unit: 'HOURS') {
+            //         // Just in case something goes wrong, pipeline will be killed after a timeout
+            //         def qg = waitForQualityGate() // Reuse taskId previously collected by withSonarQubeEnv
+            //         if (qg.status != 'OK') {
+            //             error "Pipeline aborted due to quality gate failure: ${qg.status}"
+            //         } else {
+            //             //获取sonar扫描结果
+            //             def surl="${SONAR_HOST_URL}/api/measures/component?componentKey=${SONAR_PROJECT_KEY}&metricKeys=alert_status,quality_gate_details,coverage,new_coverage,bugs,new_bugs,reliability_rating,vulnerabilities,new_vulnerabilities,security_rating,sqale_rating,sqale_index,sqale_debt_ratio,new_sqale_debt_ratio,duplicated_lines_density&additionalFields=metrics,periods"
+            //             def response=httpRequest consoleLogResponseBody: true, contentType: 'APPLICATION_JSON', ignoreSslErrors: true, url: surl
 
 
-                        def propssonar = readJSON text: response.content
-                        if (propssonar.component.measures) {
-                            propssonar.component.measures.each{ measure ->
-                                def val
-                                if (measure.periods){
-                                    val = measure.periods[0].value
-                                }else {
-                                    val = measure.value
-                                }
-                                rtMaven.deployer.addProperty("sonar.quality.${measure.metric}", val)
-                            }
-                        }
+            //             def propssonar = readJSON text: response.content
+            //             if (propssonar.component.measures) {
+            //                 propssonar.component.measures.each{ measure ->
+            //                     def val
+            //                     if (measure.periods){
+            //                         val = measure.periods[0].value
+            //                     }else {
+            //                         val = measure.value
+            //                     }
+            //                     rtMaven.deployer.addProperty("sonar.quality.${measure.metric}", val)
+            //                 }
+            //             }
 
-                        //增加sonar扫描结果到artifactory
-                        rtMaven.deployer.addProperty("qulity.gate.sonarUrl", SONAR_HOST_URL + "/dashboard/index/" + SONAR_PROJECT_KEY)
-                    }
-                }
-            }
+            //             //增加sonar扫描结果到artifactory
+            //             rtMaven.deployer.addProperty("qulity.gate.sonarUrl", SONAR_HOST_URL + "/dashboard/index/" + SONAR_PROJECT_KEY)
+            //         }
+            //     }
+            // }
             stage('add jiraResult') {
                 def requirements = getRequirementsIds();
                 echo "requirements : ${requirements}"
@@ -128,15 +128,15 @@ node('node-platform') {
                 echo "add test step"
             }
 
-            stage('xray scan') {
-                def xrayConfig = [
-                        'buildName'  : buildInfo.name,
-                        'buildNumber': buildInfo.number,
-                        'failBuild'  : false
-                ]
-                def xrayResults = artiServer.xrayScan xrayConfig
-                echo xrayResults as String
-            }
+            // stage('xray scan') {
+            //     def xrayConfig = [
+            //             'buildName'  : buildInfo.name,
+            //             'buildNumber': buildInfo.number,
+            //             'failBuild'  : false
+            //     ]
+            //     def xrayResults = artiServer.xrayScan xrayConfig
+            //     echo xrayResults as String
+            // }
 
             //promotion操作，进行包的升级
             stage('promotion') {
